@@ -87,7 +87,7 @@ public:
 		String path = ConfigManager::instance()->getTocPath();
 		path += "/" + treFile;
 
-		info("Opening TRE - " + path + " for " + recordPath, true);
+		//info("Opening TRE - " + path + " for " + recordPath, true);
 
 		size = 0;
 
