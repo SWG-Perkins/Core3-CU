@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 autom4te.cache
 config.h.in
 config.h.in~
@@ -18,3 +19,8 @@ INSTALL
 .settings/*
 
 /build/
+=======
+MMOEngine
+luacov.report.out
+luacov.stats.out
+>>>>>>> refs/remotes/core3/unstable
