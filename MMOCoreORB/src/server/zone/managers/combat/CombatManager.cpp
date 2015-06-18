@@ -1855,7 +1855,7 @@ int CombatManager::applyDamage(CreatureObject* attacker, WeaponObject* weapon, T
 }
 
 void CombatManager::sendMitigationCombatSpam(CreatureObject* defender, TangibleObject* item, uint32 damage, int type) {
-	if (defender == NULL || !defender->isPlayerCreature())
+	if (defender == NULL || !defender->isPlayerCreature() || item == NULL)
 			return;
 
 	int color = 0; //text color
