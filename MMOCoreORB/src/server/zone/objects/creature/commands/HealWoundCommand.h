@@ -1,6 +1,46 @@
 /*
-				Copyright <SWGEmu>
-		See file COPYING for copying conditions.*/
+Copyright (C) 2007 <SWGEmu>
+
+This File is part of Core3.
+
+This program is free software; you can redistribute
+it and/or modify it under the terms of the GNU Lesser
+General Public License as published by the Free Software
+Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General
+Public License along with this program; if not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Linking Engine3 statically or dynamically with other modules
+is making a combined work based on Engine3.
+Thus, the terms and conditions of the GNU Lesser General Public License
+cover the whole combination.
+
+In addition, as a special exception, the copyright holders of Engine3
+give you permission to combine Engine3 program with free software
+programs or libraries that are released under the GNU LGPL and with
+code included in the standard release of Core3 under the GNU LGPL
+license (or modified versions of such code, with unchanged license).
+You may copy and distribute such a system following the terms of the
+GNU LGPL for Engine3 and the licenses of the other code concerned,
+provided that you include the source code of that other code when
+and as the GNU LGPL requires distribution of source code.
+
+Note that people who make modified versions of Engine3 are not obligated
+to grant this special exception for their modified versions;
+it is their choice whether to do so. The GNU Lesser General Public License
+gives permission to release a modified version without this exception;
+this exception also makes it possible to release a modified version
+which carries forward this exception.
+*/
 
 #ifndef HEALWOUNDCOMMAND_H_
 #define HEALWOUNDCOMMAND_H_
@@ -12,7 +52,6 @@
 #include "server/zone/managers/player/PlayerManager.h"
 #include "server/zone/objects/creature/events/InjuryTreatmentTask.h"
 #include "server/zone/objects/creature/buffs/Buff.h"
-#include "server/zone/objects/creature/buffs/DelayedBuff.h"
 #include "server/zone/packets/object/CombatAction.h"
 #include "server/zone/managers/collision/CollisionManager.h"
 
@@ -28,20 +67,10 @@ public:
 		range = 6;
 	}
 
-	void deactivateWoundTreatment(CreatureObject* creature) const {
+	void deactivateWoundTreatment(CreatureObject* creature) {
 		float modSkill = (float)creature->getSkillMod("healing_wound_speed");
 
 		int delay = (int)round((modSkill * -(2.0f / 25.0f)) + 20.0f);
-
-		if (creature->hasBuff(BuffCRC::FOOD_HEAL_RECOVERY)) {
-			DelayedBuff* buff = cast<DelayedBuff*>( creature->getBuff(BuffCRC::FOOD_HEAL_RECOVERY));
-
-			if (buff != NULL) {
-				float percent = buff->getSkillModifierValue("heal_recovery");
-
-				delay = round(delay * (100.0f - percent) / 100.0f);
-			}
-		}
 
 		//Force the delay to be at least 3 seconds.
 		delay = (delay < 3) ? 3 : delay;
@@ -51,7 +80,7 @@ public:
 		creature->addPendingTask("woundTreatment", task, delay * 1000);
 	}
 
-	void doAnimations(CreatureObject* creature, CreatureObject* creatureTarget) const {
+	void doAnimations(CreatureObject* creature, CreatureObject* creatureTarget) {
 		creatureTarget->playEffect("clienteffect/healing_healwound.cef", "");
 
 		if (creature == creatureTarget)
@@ -60,7 +89,7 @@ public:
 			creature->doAnimation("heal_other");
 	}
 
-	void awardXp(CreatureObject* creature, const String& type, int power) const {
+	void awardXp(CreatureObject* creature, const String& type, int power) {
 		if (!creature->isPlayerCreature())
 			return;
 
@@ -75,7 +104,7 @@ public:
 		playerManager->awardExperience(player, type, amount, true);
 	}
 
-	void sendWoundMessage(CreatureObject* object, CreatureObject* target, uint8 attribute, uint32 woundsHealed) const {
+	void sendWoundMessage(CreatureObject* object, CreatureObject* target, uint8 attribute, uint32 woundsHealed) {
 		if (!object->isPlayerCreature())
 			return;
 
@@ -103,7 +132,7 @@ public:
 		}
 	}
 
-	bool canPerformSkill(CreatureObject* creature, CreatureObject* creatureTarget, WoundPack* woundPack) const {
+	bool canPerformSkill(CreatureObject* creature, CreatureObject* creatureTarget, WoundPack* woundPack) {
 		if (!creature->canTreatWounds()) {
 			creature->sendSystemMessage("@healing_response:enhancement_must_wait"); //You must wait before you can heal wounds or apply enhancements again.
 			return false;
@@ -118,22 +147,17 @@ public:
 		if (medicalRatingNotIncludingCityBonus <= 0) {
 			creature->sendSystemMessage("@healing_response:must_be_near_droid"); //You must be in a hospital, at a campsite, or near a surgical droid to do that.
 			return false;
-		} else {
-			// are we in a cantina? we have a private medical rating so either thats form a droid or camp or hospital
-			ManagedReference<SceneObject*> root = creature->getRootParent();
-			if (root != NULL && root->isStaticObject()) {
-				uint32 gameObjectType = root->getGameObjectType();
-				switch (gameObjectType) {
-						case SceneObjectType::RECREATIONBUILDING:
-						case SceneObjectType::HOTELBUILDING:
-						case SceneObjectType::THEATERBUILDING:
-							creature->sendSystemMessage("@healing_response:must_be_in_hospital"); // You must be in a hospital or at a campsite to do that.
-							return false;
-				}
-			}
 		}
 
-		// TODO add check that your not in a cantinna with droid bonus
+		if (creature->isProne() || creature->isMeditating()) {
+			creature->sendSystemMessage("@error_message:wrong_state"); //You cannot complete that action while in your current state.
+			return false;
+		}
+
+		if (creature->isRidingMount()) {
+			creature->sendSystemMessage("@error_message:survey_on_mount"); //You cannot perform that action while mounted on a creature or driving a vehicle.
+			return false;
+		}
 
 		if (creature->isInCombat()) {
 			creature->sendSystemMessage("You cannot do that while in Combat.");
@@ -163,7 +187,7 @@ public:
 		return true;
 	}
 
-	void parseModifier(const String& modifier, uint8& attribute, uint64& objectId) const {
+	void parseModifier(const String& modifier, uint8& attribute, uint64& objectId) {
 		if (!modifier.isEmpty()) {
 			StringTokenizer tokenizer(modifier);
 			tokenizer.setDelimeter("|");
@@ -182,7 +206,7 @@ public:
 		}
 	}
 
-	uint8 findAttribute(CreatureObject* creature, uint8 startAttribute = 0) const {
+	uint8 findAttribute(CreatureObject* creature, uint8 startAttribute = 0) {
 		for (int i = startAttribute; i < 9; ++i) {
 			int wounds = creature->getWounds(i);
 
@@ -194,7 +218,7 @@ public:
 	}
 
 
-	WoundPack* findWoundPack(CreatureObject* creature, uint8 attribute) const {
+	WoundPack* findWoundPack(CreatureObject* creature, uint8 attribute) {
 		SceneObject* inventory = creature->getSlottedObject("inventory");
 
 		int medicineUse = creature->getSkillMod("healing_ability");
@@ -224,12 +248,12 @@ public:
 		return NULL;
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+		if (!checkStateMask(creature))
+			return INVALIDSTATE;
 
-		int result = doCommonMedicalCommandChecks(creature);
-
-		if (result != SUCCESS)
-			return result;
+		if (!checkInvalidLocomotions(creature))
+			return INVALIDLOCOMOTION;
 
 		ManagedReference<SceneObject*> object = server->getZoneServer()->getObject(target);
 
@@ -252,10 +276,10 @@ public:
 
 		Locker clocker(creatureTarget, creature);
 
-		if ((creatureTarget->isAiAgent() && !creatureTarget->isPet()) || creatureTarget->isDroidObject() || creatureTarget->isVehicleObject() || creatureTarget->isDead() || creatureTarget->isRidingMount() || creatureTarget->isAttackableBy(creature))
+		if ((creatureTarget->isAiAgent() && !creatureTarget->isPet()) || creatureTarget->isDroidObject() || creatureTarget->isDead() || creatureTarget->isRidingMount() || creatureTarget->isAttackableBy(creature))
 			creatureTarget = creature;
 
-		if (!creature->isInRange(creatureTarget, range + creatureTarget->getTemplateRadius() + creature->getTemplateRadius()))
+		if (!creature->isInRange(creatureTarget, range))
 			return TOOFAR;
 
 		uint8 attribute = CreatureAttribute::UNKNOWN;
@@ -342,7 +366,6 @@ public:
 
 		deactivateWoundTreatment(creature);
 
-		Locker locker(woundPack);
 		woundPack->decreaseUseCount();
 
 		if (creatureTarget != creature && !creatureTarget->isPet())
@@ -351,8 +374,6 @@ public:
 		doAnimations(creature, creatureTarget);
 
 		creature->notifyObservers(ObserverEventType::MEDPACKUSED);
-
-		checkForTef(creature, creatureTarget);
 
 		return SUCCESS;
 	}

@@ -1,6 +1,46 @@
 /*
-				Copyright <SWGEmu>
-		See file COPYING for copying conditions.*/
+Copyright (C) 2007 <SWGEmu>
+
+This File is part of Core3.
+
+This program is free software; you can redistribute
+it and/or modify it under the terms of the GNU Lesser
+General Public License as published by the Free Software
+Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General
+Public License along with this program; if not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Linking Engine3 statically or dynamically with other modules
+is making a combined work based on Engine3.
+Thus, the terms and conditions of the GNU Lesser General Public License
+cover the whole combination.
+
+In addition, as a special exception, the copyright holders of Engine3
+give you permission to combine Engine3 program with free software
+programs or libraries that are released under the GNU LGPL and with
+code included in the standard release of Core3 under the GNU LGPL
+license (or modified versions of such code, with unchanged license).
+You may copy and distribute such a system following the terms of the
+GNU LGPL for Engine3 and the licenses of the other code concerned,
+provided that you include the source code of that other code when
+and as the GNU LGPL requires distribution of source code.
+
+Note that people who make modified versions of Engine3 are not obligated
+to grant this special exception for their modified versions;
+it is their choice whether to do so. The GNU Lesser General Public License
+gives permission to release a modified version without this exception;
+this exception also makes it possible to release a modified version
+which carries forward this exception.
+*/
 
 #ifndef GRANTBADGECOMMAND_H_
 #define GRANTBADGECOMMAND_H_
@@ -15,7 +55,7 @@ public:
 
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -23,107 +63,40 @@ public:
 		if (!checkInvalidLocomotions(creature))
 			return INVALIDLOCOMOTION;
 
-		if (arguments.isEmpty() && target == 0) {
-			creature->sendSystemMessage("Syntax: /grantBadge [-area [range]] [badge id]");
+	try {
+
+		ManagedReference<SceneObject* > object =
+				server->getZoneServer()->getObject(target);
+
+		ManagedReference<CreatureObject*> player = NULL;
+
+		StringTokenizer args(arguments.toString());
+
+		if(object == NULL || !object->isPlayerCreature()) {
+
+			String firstName;
+			if(args.hasMoreTokens()) {
+				args.getStringToken(firstName);
+				player = server->getZoneServer()->getPlayerManager()->getPlayer(firstName);
+			}
+
+		} else {
+			player = cast<CreatureObject*>( object.get());
+		}
+
+		if (player == NULL) {
+			creature->sendSystemMessage("invalid arguments for grantBadge command:  /grantBadge <firstname> <badgeId>");
 			return GENERALERROR;
 		}
 
-		ManagedReference<SceneObject*> targetObject = server->getZoneServer()->getObject(target);
-		StringTokenizer args(arguments.toString());
+		int badgeId;
+		badgeId = args.getIntToken();
 
-		bool area = false;
-		float range = 64;
-		float badgeId = 0;
+		server->getPlayerManager()->awardBadge(player->getPlayerObject(), badgeId);
 
-		if (args.hasMoreTokens()) {
-
-			String arg;
-			args.getStringToken(arg);
-			bool validOption = false;
-
-			if (arg.charAt(0) == '-') {
-				if (arg.toLowerCase() == "-help" || arg.toLowerCase() == "-h") {
-					creature->sendSystemMessage("Syntax: /grantBadge [-area [range]] [badge id]");
-					return GENERALERROR;
-				}
-
-				if (arg.toLowerCase() == "-area" || arg.toLowerCase() == "-a") {
-					validOption = true;
-					area = true;
-
-					if (!args.hasMoreTokens()) {
-						creature->sendSystemMessage("Syntax: /grantBadge [-area [range]] [badge id]");
-						return GENERALERROR;
-					}
-
-					badgeId = args.getFloatToken();
-
-					if (args.hasMoreTokens()) {
-						range = badgeId;
-						badgeId = args.getFloatToken();
-
-						if (range <= 0 || range > 192) {
-							creature->sendSystemMessage("Invalid range, must be between 1 and 192.");
-							return INVALIDPARAMETERS;
-						}
-					}
-				}
-
-				if (!validOption) {
-					creature->sendSystemMessage("Invalid option " + arg);
-					return INVALIDPARAMETERS;
-				}
-			} else {
-				badgeId = Integer::valueOf(arg);
-			}
-		}
-
-		if (area) {
-			SortedVector<ManagedReference<QuadTreeEntry*> > closeObjects;
-			Zone* zone = creature->getZone();
-
-			if (creature->getCloseObjects() == NULL) {
-				creature->info("Null closeobjects vector in GrantBadgeCommand::doQueueCommand", true);
-				zone->getInRangeObjects(creature->getPositionX(), creature->getPositionY(), range, &closeObjects, true);
-			}
-			else {
-				CloseObjectsVector* closeVector = (CloseObjectsVector*) creature->getCloseObjects();
-				closeVector->safeCopyTo(closeObjects);
-			}
-
-			int numGranted = 0;
-
-			for (int i = 0; i < closeObjects.size(); i++) {
-				SceneObject* targetObject = cast<SceneObject*>(closeObjects.get(i).get());
-				if (targetObject != NULL && targetObject->isPlayerCreature()) {
-					ManagedReference<CreatureObject*> player = cast<CreatureObject*>(targetObject);
-
-					if (player != NULL && player != creature) {
-						Locker crossLocker(player, creature);
-						server->getPlayerManager()->awardBadge(player->getPlayerObject(), badgeId);
-						numGranted++;
-					}
-				}
-			}
-			creature->sendSystemMessage("Granted badge " + String::valueOf(badgeId) + " to " + String::valueOf(numGranted) + " players found within " + String::valueOf(range) + "m.");
-			return SUCCESS;
-
-		} else {
-			if (targetObject == NULL || !targetObject->isPlayerCreature()) {
-					creature->sendSystemMessage("Invalid target.");
-					return INVALIDTARGET;
-			} else {
-				ManagedReference<CreatureObject*> player = cast<CreatureObject*>(targetObject.get());
-
-				if (player != NULL) {
-					Locker crossLocker(player, creature);
-					server->getPlayerManager()->awardBadge(player->getPlayerObject(), badgeId);
-					creature->sendSystemMessage("Granted badge " + String::valueOf(badgeId) + " to " + player->getDisplayedName() + ".");
-					return SUCCESS;
-				}
-			}
-		}
-
+	} catch (Exception& e) {
+		creature->sendSystemMessage("invalid arguments for grantBadge command:  /grantBadge <firstname> <badgeId>");
+	}
 		return SUCCESS;
 	}
 

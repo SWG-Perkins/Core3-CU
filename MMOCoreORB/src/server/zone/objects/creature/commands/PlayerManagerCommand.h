@@ -26,9 +26,11 @@ public:
 
 		ManagedReference<PlayerManager*> playerManager = player->getZoneServer()->getPlayerManager();
 
-		if (playerManager == NULL) {
-			creature->sendSystemMessage("playerManager not found");
-			return 0;
+		if(playerManager == NULL) {
+			if(creature != NULL) {
+				creature->sendSystemMessage("playerManager not found");
+				return 0;
+			}
 		}
 
 		//Parse the weather command.

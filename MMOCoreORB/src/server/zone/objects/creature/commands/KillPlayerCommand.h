@@ -1,6 +1,46 @@
 /*
-				Copyright <SWGEmu>
-		See file COPYING for copying conditions.*/
+Copyright (C) 2007 <SWGEmu>
+
+This File is part of Core3.
+
+This program is free software; you can redistribute
+it and/or modify it under the terms of the GNU Lesser
+General Public License as published by the Free Software
+Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General
+Public License along with this program; if not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Linking Engine3 statically or dynamically with other modules
+is making a combined work based on Engine3.
+Thus, the terms and conditions of the GNU Lesser General Public License
+cover the whole combination.
+
+In addition, as a special exception, the copyright holders of Engine3
+give you permission to combine Engine3 program with free software
+programs or libraries that are released under the GNU LGPL and with
+code included in the standard release of Core3 under the GNU LGPL
+license (or modified versions of such code, with unchanged license).
+You may copy and distribute such a system following the terms of the
+GNU LGPL for Engine3 and the licenses of the other code concerned,
+provided that you include the source code of that other code when
+and as the GNU LGPL requires distribution of source code.
+
+Note that people who make modified versions of Engine3 are not obligated
+to grant this special exception for their modified versions;
+it is their choice whether to do so. The GNU Lesser General Public License
+gives permission to release a modified version without this exception;
+this exception also makes it possible to release a modified version
+which carries forward this exception.
+*/
 
 #ifndef KILLPLAYERCOMMAND_H_
 #define KILLPLAYERCOMMAND_H_
@@ -16,7 +56,7 @@ public:
 
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -32,7 +72,7 @@ public:
 
 		//Explain syntax
 		if (arguments.isEmpty() && target == 0) {
-			creature->sendSystemMessage("Syntax: /killPlayer [player name] [-area [range]] -wounds [<health> [action] [mind]]");
+			creature->sendSystemMessage("Syntax: /killPlayer [player name] [-area [range]] [<health> [action] [mind]]");
 			return GENERALERROR;
 		}
 
@@ -59,7 +99,6 @@ public:
 
 		//Initialize components used to kill nearby creatures
 		bool area = false;
-		bool wounds = false;
 		bool damage = false;
 		float range = 64;
 
@@ -81,7 +120,7 @@ public:
 				//Help Syntax
 				if (arg.toLowerCase() == "-help" || arg == "-H") {
 					validOption = true;
-					creature->sendSystemMessage("Syntax: /kill [-area [range]] [-wounds] [<health> [action] [mind]]");
+					creature->sendSystemMessage("Syntax: /kill [-area [range]] [<health> [action] [mind]]");
 					return GENERALERROR;
 				}
 
@@ -97,12 +136,6 @@ public:
 							return INVALIDPARAMETERS;
 						}
 					}
-				}
-
-				//Make command apply wounds as well as damage
-				if (arg.toLowerCase() == "-wounds" || arg == "-w") {
-					validOption = true;
-					wounds = true;
 				}
 
 				if (!validOption) {
@@ -150,7 +183,8 @@ public:
 								throw Exception("Too many arguments.");
 						}
 					}
-				} catch (Exception& e) {
+				}
+				catch (Exception e) {
 					creature->sendSystemMessage(e.getMessage());
 					return INVALIDPARAMETERS;
 				}
@@ -187,18 +221,6 @@ public:
 							targetPlayer->inflictDamage(creature, 0, healthDamage, true, true);
 							targetPlayer->inflictDamage(creature, 3, actionDamage, true, true);
 							targetPlayer->inflictDamage(creature, 6, mindDamage, true, true);
-
-							if( wounds ){
-								targetPlayer->addWounds( 0, healthDamage, true );
-								targetPlayer->addWounds( 1, healthDamage, true );
-								targetPlayer->addWounds( 2, healthDamage, true );
-								targetPlayer->addWounds( 3, actionDamage, true );
-								targetPlayer->addWounds( 4, actionDamage, true );
-								targetPlayer->addWounds( 5, actionDamage, true );
-								targetPlayer->addWounds( 6, mindDamage, true );
-								targetPlayer->addWounds( 7, mindDamage, true );
-								targetPlayer->addWounds( 8, mindDamage, true );
-							}
 
 							if (targetPlayer->isPlayerCreature())
 								targetPlayer->sendSystemMessage("You have been damaged!");
@@ -252,18 +274,6 @@ public:
 					targetPlayer->inflictDamage(creature, 0, healthDamage, true, true);
 					targetPlayer->inflictDamage(creature, 3, actionDamage, true, true);
 					targetPlayer->inflictDamage(creature, 6, mindDamage, true, true);
-
-					if( wounds ){
-						targetPlayer->addWounds( 0, healthDamage, true );
-						targetPlayer->addWounds( 1, healthDamage, true );
-						targetPlayer->addWounds( 2, healthDamage, true );
-						targetPlayer->addWounds( 3, actionDamage, true );
-						targetPlayer->addWounds( 4, actionDamage, true );
-						targetPlayer->addWounds( 5, actionDamage, true );
-						targetPlayer->addWounds( 6, mindDamage, true );
-						targetPlayer->addWounds( 7, mindDamage, true );
-						targetPlayer->addWounds( 8, mindDamage, true );
-					}
 
 					if (targetPlayer->isPlayerCreature())
 						creature->sendSystemMessage(targetPlayer->getFirstName() + " damaged.");

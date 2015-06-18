@@ -26,9 +26,11 @@ public:
 
 		ManagedReference<WeatherManager*> weatherManager = player->getZone()->getPlanetManager()->getWeatherManager();
 
-		if (weatherManager == NULL) {
-			creature->sendSystemMessage("Weather is globally disabled in this zone");
-			return 0;
+		if(weatherManager == NULL) {
+			if(creature != NULL) {
+				creature->sendSystemMessage("Weather is globally disabled in this zone");
+				return 0;
+			}
 		}
 
 		//Check for valid zone. Handle this in your manager.

@@ -56,9 +56,9 @@ public:
 				crc = "throw_grenade_far_poison";
 		}
 
-		CombatAction* action = new CombatAction(creature, creatureTarget,  crc.hashCode(), 1, 0L);
+		//CombatAction* action = new CombatAction(creature, creatureTarget,  crc.hashCode(), 1, 0L);
 
-		creature->broadcastMessage(action, true);
+		//creature->broadcastMessage(action, true);
 	}
 
 	void parseModifier(const String& modifier, uint64& objectId) const {
