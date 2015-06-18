@@ -1,0 +1,10 @@
+8bba37c was Ivojedi, 9 days ago, message: [Added] cities now check for invalid tax rates on load
+64a7c3f was Ivojedi, 10 days ago, message: [Fixed] cloning now removes pvp tefs
+89cf9c1 was Ivojedi, 10 days ago, message: [Fixed] sometimes being able to enter an opposite faction pvp base while it has turrets up - mantis 6338
+e11181b was Miztahh, 10 days ago, message: [fixed] A few unattackable factional neutral destroy mission npcs - mantis 6336
+9c3f5ce was Andreas Rammhold, 10 days ago, message: [fixed] crash on guildeupdate
+b0c4eab was Ivojedi, 10 days ago, message: [Fixed] talking corpses
+9dd5cd0 was Ivojedi, 10 days ago, message: [Fixed] weapon decay chance no longer rolls twice for sliced/pupped weapons
+b8d0d8a was Miztahh, 10 days ago, message: [removed] Testing npcs from nearby DWB
+30cc2ee was Ivojedi, 10 days ago, message: Merge "[Fixed] income and property taxes being transposed" into publish7
+702f2ba was Andreas Rammhold, 10 days ago, message: [fixed] pointBlank{Area,Single}1 now require RANGEDWEAPON

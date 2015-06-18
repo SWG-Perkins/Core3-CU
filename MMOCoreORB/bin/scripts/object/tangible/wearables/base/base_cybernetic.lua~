@@ -1,0 +1,5 @@
+object_tangible_wearables_base_base_cybernetic = object_tangible_wearables_base_shared_base_cybernetic:new {
+
+}
+
+ObjectTemplates:addTemplate(object_tangible_wearables_base_base_cybernetic, "object/tangible/wearables/base/base_cybernetic.iff")
