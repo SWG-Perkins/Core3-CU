@@ -1,0 +1,38 @@
+/*
+Copyright (C) 2014 CU Galaxies
+*/
+
+#ifndef SABERHEADHITCOMMAND_H_
+#define SABERHEADHITCOMMAND_H_
+
+#include "server/zone/objects/scene/SceneObject.h"
+
+class SaberHeadHitCommand : public CombatQueueCommand {
+public:
+
+	SaberHeadHitCommand(const String& name, ZoneProcessServer* server)
+		: CombatQueueCommand(name, server) {
+
+	}
+
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+
+		if (!checkStateMask(creature))
+			return INVALIDSTATE;
+
+		if (!checkInvalidLocomotions(creature))
+			return INVALIDLOCOMOTION;
+
+		if (creature->getWeapon()->isJediOneHandedWeapon())
+			animationCRC = String("combo_4a_light").hashCode();
+		else if (creature->getWeapon()->isJediTwoHandedWeapon())
+			animationCRC = String("combo_2b_light").hashCode();
+		else if (creature->getWeapon()->isJediPolearmWeapon())
+			animationCRC = String("combo_4b_light").hashCode();
+
+		return doCombatAction(creature, target);
+	}
+
+};
+
+#endif //SABERHEADHITCOMMAND_H_

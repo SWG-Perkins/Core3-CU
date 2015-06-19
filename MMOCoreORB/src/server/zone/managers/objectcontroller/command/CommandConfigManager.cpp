@@ -710,7 +710,6 @@ int CommandConfigManager::addCommand(lua_State* L) {
 }
 
 void CommandConfigManager::registerCommands() {
-	/*
 	commandFactory.registerCommand<AbandonQuestCommand>(String("AbandonQuest").toLowerCase());
 	commandFactory.registerCommand<AborthyperspaceCommand>(String("Aborthyperspace").toLowerCase());
 	commandFactory.registerCommand<ActivateCloneCommand>(String("ActivateClone").toLowerCase());
@@ -1528,5 +1527,5 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<WaypointCommand>(String("Waypoint").toLowerCase());
 	commandFactory.registerCommand<WipeItemsCommand>(String("WipeItems").toLowerCase());
 	commandFactory.registerCommand<WookieeRoarCommand>(String("WookieeRoar").toLowerCase());
-	*/
+
 }

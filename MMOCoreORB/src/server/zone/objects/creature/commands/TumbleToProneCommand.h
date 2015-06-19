@@ -1,6 +1,46 @@
 /*
-				Copyright <SWGEmu>
-		See file COPYING for copying conditions.*/
+Copyright (C) 2007 <SWGEmu>
+
+This File is part of Core3.
+
+This program is free software; you can redistribute
+it and/or modify it under the terms of the GNU Lesser
+General Public License as published by the Free Software
+Foundation; either version 2 of the License,
+or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General
+Public License along with this program; if not, write to
+the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Linking Engine3 statically or dynamically with other modules
+is making a combined work based on Engine3.
+Thus, the terms and conditions of the GNU Lesser General Public License
+cover the whole combination.
+
+In addition, as a special exception, the copyright holders of Engine3
+give you permission to combine Engine3 program with free software
+programs or libraries that are released under the GNU LGPL and with
+code included in the standard release of Core3 under the GNU LGPL
+license (or modified versions of such code, with unchanged license).
+You may copy and distribute such a system following the terms of the
+GNU LGPL for Engine3 and the licenses of the other code concerned,
+provided that you include the source code of that other code when
+and as the GNU LGPL requires distribution of source code.
+
+Note that people who make modified versions of Engine3 are not obligated
+to grant this special exception for their modified versions;
+it is their choice whether to do so. The GNU Lesser General Public License
+gives permission to release a modified version without this exception;
+this exception also makes it possible to release a modified version
+which carries forward this exception.
+*/
 
 #ifndef TUMBLETOPRONECOMMAND_H_
 #define TUMBLETOPRONECOMMAND_H_
@@ -16,7 +56,7 @@ public:
 
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -24,41 +64,28 @@ public:
 		if (!checkInvalidLocomotions(creature))
 			return INVALIDLOCOMOTION;
 
-		if (creature->isDizzied() && System::random(100) < 85) {
-			creature->queueDizzyFallEvent();
-		} else {
-			//Check for and deduct HAM cost.
-			int actionCost = creature->calculateCostAdjustment(CreatureAttribute::QUICKNESS, 100);
-			if (creature->getHAM(CreatureAttribute::ACTION) <= actionCost)
-				return INSUFFICIENTHAM;
+		//Check for and deduct HAM cost.
+		int actionCost = creature->calculateCostAdjustment(CreatureAttribute::QUICKNESS, 100);
+		if (creature->getHAM(CreatureAttribute::ACTION) <= actionCost)
+			return INSUFFICIENTHAM;
 
-			creature->inflictDamage(creature, CreatureAttribute::ACTION, actionCost, true);
+		creature->inflictDamage(creature, CreatureAttribute::ACTION, actionCost, true);
 
-			creature->setPosture(CreaturePosture::PRONE, false);
+		creature->setPosture(CreaturePosture::PRONE, false);
 
-			Reference<CreatureObject*> defender = server->getZoneServer()->getObject(target).castTo<CreatureObject*>();
-			if (defender == NULL)
-				creature->doCombatAnimation(creature,STRING_HASHCODE("tumble"),0,0xFF);
-			else
-				creature->doCombatAnimation(defender,STRING_HASHCODE("tumble_facing"),0,0xFF);
+		if (creature->isDizzied())
+			creature->queueDizzyFallEvent();		
+		
+		Reference<CreatureObject*> defender = server->getZoneServer()->getObject(target).castTo<CreatureObject*>();
+		if (defender == NULL)
+			creature->doCombatAnimation(creature,String("tumble").hashCode(),0,0xFF);
+		else
+			creature->doCombatAnimation(defender,String("tumble_facing").hashCode(),0,0xFF);
 
-			Reference<StateBuff*> buff = new StateBuff(creature, CreatureState::TUMBLING, 1);
-
-			Locker locker(buff);
-
-			buff->setSkillModifier("melee_defense", 50);
-			buff->setSkillModifier("ranged_defense", 50);
-
-			creature->addBuff(buff);
-
-			locker.release();
-
-			CreatureObjectDeltaMessage3* pmsg = new CreatureObjectDeltaMessage3(creature);
-			pmsg->updatePosture();
-			pmsg->close();
-			creature->broadcastMessage(pmsg, true);
-			creature->sendStateCombatSpam("cbt_spam", "tum_prone", 0);
-		}
+		CreatureObjectDeltaMessage3* pmsg = new CreatureObjectDeltaMessage3(creature);
+		pmsg->updatePosture();
+		pmsg->close();
+		creature->broadcastMessage(pmsg, true);
 
 		return SUCCESS;
 	}
