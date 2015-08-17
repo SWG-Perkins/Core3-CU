@@ -28,7 +28,7 @@ public:
 		actionCRC = 0;
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -39,7 +39,7 @@ public:
 		return SUCCESS;
 	}
 
-	bool checkGroupLeader(CreatureObject* player, GroupObject* group) {
+	bool checkGroupLeader(CreatureObject* player, GroupObject* group) const {
 		if (player == NULL)
 			return false;
 
@@ -61,6 +61,58 @@ public:
 		return true;
 	}
 
+	bool isValidGroupAbilityTarget(CreatureObject* leader, CreatureObject* target, bool allowPet) const {
+		if (allowPet) {
+			if (!target->isPlayerCreature() && !target->isPet()) {
+				return false;
+			}
+		} else if (!target->isPlayerCreature()) {
+			return false;
+		}
+
+		if (target == leader)
+			return true;
+
+		if (target->getParentRecursively(SceneObjectType::BUILDING) != leader->getParentRecursively(SceneObjectType::BUILDING))
+			return false;
+
+		PlayerObject* leaderGhost = leader->getPlayerObject();
+
+		if (leaderGhost == NULL)
+			return false;
+
+		PlayerObject* targetGhost = NULL;
+
+		if (allowPet && target->isPet()) {
+			ManagedReference<CreatureObject*> owner = target->getLinkedCreature().get();
+
+			if (owner != NULL && owner->isPlayerCreature()) {
+				targetGhost = owner->getPlayerObject();
+			}
+		} else {
+			targetGhost = target->getPlayerObject();
+		}
+
+		if (targetGhost == NULL)
+			return false;
+
+		if (leader->getFaction() != 0 && target->getFaction() != 0) {
+			if (leader->getFaction() != target->getFaction() && targetGhost->getFactionStatus() != FactionStatus::ONLEAVE)
+				return false;
+
+			if (leader->getFaction() == target->getFaction() && leaderGhost->getFactionStatus() == FactionStatus::COVERT && targetGhost->getFactionStatus() == FactionStatus::OVERT)
+				return false;
+
+			if (leaderGhost->getFactionStatus() == FactionStatus::ONLEAVE && targetGhost->getFactionStatus() != FactionStatus::ONLEAVE)
+				return false;
+		}
+
+		if (leader->getFaction() == 0 && target->getFaction() != 0 && targetGhost->getFactionStatus() != FactionStatus::ONLEAVE)
+			return false;
+
+		return true;
+	}
+
 /*	bool shoutCommand(CreatureObject* player, GroupObject* group) {
 		if (player == NULL || group == NULL)
 			return false;
@@ -78,7 +130,7 @@ public:
 		return true;
 	}
 */
-	float calculateGroupModifier(GroupObject* group) {
+	float calculateGroupModifier(GroupObject* group) const {
 		if (group == NULL)
 			return 0;
 
@@ -88,13 +140,13 @@ public:
 
 			return modifier;
     }
-    bool inflictHAM(CreatureObject* player, int health, int action, int mind){
+    bool inflictHAM(CreatureObject* player, int health, int action, int mind) const {
         if (player == NULL)
 			return false;
         if(health < 0 || action < 0 || mind < 0)
             return false;
 
-        if(player->getHAM(CreatureAttribute::ACTION) < action || player->getHAM(CreatureAttribute::HEALTH) < health || player->getHAM(CreatureAttribute::MIND) < mind)
+        if(player->getHAM(CreatureAttribute::ACTION) <= action || player->getHAM(CreatureAttribute::HEALTH) <= health || player->getHAM(CreatureAttribute::MIND) <= mind)
             return false;
 
         if(health > 0)
@@ -109,7 +161,7 @@ public:
         return true;
     }
 	
-    void sendCombatSpam(CreatureObject* player){
+    void sendCombatSpam(CreatureObject* player) const {
         if (player == NULL)
 			return;
         if(combatSpam == "")
@@ -148,6 +200,10 @@ public:
     bool isSquadLeaderCommand(){
         return true;
     }
+
+	float getCommandDuration(CreatureObject* object, const UnicodeString& arguments) const {
+		return defaultTime;
+	}
 
     String getAction() const {
         return action;

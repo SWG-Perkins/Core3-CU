@@ -15,6 +15,7 @@
 #include "server/zone/objects/creature/events/InjuryTreatmentTask.h"
 #include "server/zone/objects/creature/buffs/Buff.h"
 #include "server/zone/objects/creature/BuffAttribute.h"
+#include "server/zone/objects/creature/buffs/DelayedBuff.h"
 #include "server/zone/packets/object/CombatAction.h"
 #include "QueueCommand.h"
 
@@ -28,9 +29,10 @@ public:
 		: QueueCommand(name, server) {
 		range = 7;
 		mindCost = 100;
+		state = 0;
 	}
 
-	void doAnimations(CreatureObject* creature, CreatureObject* creatureTarget) {
+	void doAnimations(CreatureObject* creature, CreatureObject* creatureTarget) const {
 		creatureTarget->playEffect("clienteffect/healing_healdamage.cef", "");
 
 		if (creature == creatureTarget)
@@ -39,14 +41,14 @@ public:
 			creature->doAnimation("heal_other");
 	}
 
-	void parseModifier(const String& modifier, uint64& objectId) {
+	void parseModifier(const String& modifier, uint64& objectId) const {
 		if (!modifier.isEmpty())
 			objectId = Long::valueOf(modifier);
 		else
 			objectId = 0;
 	}
 
-	CurePack* findCurePack(CreatureObject* creature) {
+	CurePack* findCurePack(CreatureObject* creature) const {
 		SceneObject* inventory = creature->getSlottedObject("inventory");
 
 		int medicineUse = creature->getSkillMod("healing_ability");
@@ -76,7 +78,7 @@ public:
 		return NULL;
 	}
 
-	void sendCureMessage(CreatureObject* object, CreatureObject* target) {
+	void sendCureMessage(CreatureObject* object, CreatureObject* target) const {
 		if (!object->isPlayerCreature())
 			return;
 
@@ -120,9 +122,19 @@ public:
 		}
 	}
 
-	void deactivateConditionTreatment(CreatureObject* creature) {
+	void deactivateConditionTreatment(CreatureObject* creature) const {
 		float modSkill = (float)creature->getSkillMod("healing_injury_speed");
 		int delay = (int)round(20.0f - (modSkill / 5));
+
+		if (creature->hasBuff(BuffCRC::FOOD_HEAL_RECOVERY)) {
+			DelayedBuff* buff = cast<DelayedBuff*>( creature->getBuff(BuffCRC::FOOD_HEAL_RECOVERY));
+
+			if (buff != NULL) {
+				float percent = buff->getSkillModifierValue("heal_recovery");
+
+				delay = round(delay * (100.0f - percent) / 100.0f);
+			}
+		}
 
 		//Force the delay to be at least 4 seconds.
 		delay = (delay < 4) ? 4 : delay;
@@ -132,7 +144,7 @@ public:
 		creature->addPendingTask("conditionTreatment", task, delay * 1000);
 	}
 
-	void awardXp(CreatureObject* creature, const String& type, int power) {
+	void awardXp(CreatureObject* creature, const String& type, int power) const {
 		if (!creature->isPlayerCreature())
 			return;
 
@@ -147,7 +159,7 @@ public:
 		playerManager->awardExperience(player, type, amount, true);
 	}
 
-	bool checkTarget(CreatureObject* creature, CreatureObject* creatureTarget) {
+	bool checkTarget(CreatureObject* creature, CreatureObject* creatureTarget) const {
 
 		switch (state) {
 		case CreatureState::POISONED:
@@ -181,7 +193,7 @@ public:
 	}
 
 	void handleArea(CreatureObject* creature, CreatureObject* areaCenter, CurePack* pharma,
-			float range) {
+			float range) const {
 
 		Zone* zone = creature->getZone();
 
@@ -228,7 +240,7 @@ public:
 		}
 	}
 
-	void doAreaMedicActionTarget(CreatureObject* creature, CreatureObject* creatureTarget, PharmaceuticalObject* pharma) {
+	void doAreaMedicActionTarget(CreatureObject* creature, CreatureObject* creatureTarget, PharmaceuticalObject* pharma) const {
 		CurePack* curePack = NULL;
 
 		if (pharma->isCurePack())
@@ -242,9 +254,11 @@ public:
 
 		if (creatureTarget != creature && !creatureTarget->isPet())
 			awardXp(creature, "medical", 50); //No experience for healing yourself or pets.
+
+		checkForTef(creature, creatureTarget);
 	}
 
-	bool canPerformSkill(CreatureObject* creature, CreatureObject* creatureTarget, CurePack* curePack) {
+	bool canPerformSkill(CreatureObject* creature, CreatureObject* creatureTarget, CurePack* curePack) const {
 		switch (state) {
 		case CreatureState::POISONED:
 			if (!creatureTarget->isPoisoned()) {
@@ -306,22 +320,6 @@ public:
 			return false;
 		}
 
-
-		if (creature->isProne()) {
-			creature->sendSystemMessage("You cannot Cure States while prone.");
-			return false;
-		}
-
-		if (creature->isMeditating()) {
-			creature->sendSystemMessage("You cannot Cure States while Meditating.");
-			return false;
-		}
-
-		if (creature->isRidingMount()) {
-			creature->sendSystemMessage("@error_message:survey_on_mount"); //You cannot perform that action while mounted on a creature or driving a vehicle.
-			return false;
-		}
-
 		if (!creatureTarget->isHealableBy(creature)) {
 			creature->sendSystemMessage("@healing:pvp_no_help");
 			return false;
@@ -342,14 +340,12 @@ public:
 		return true;
 	}
 
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+		int result = doCommonMedicalCommandChecks(creature);
 
-		if (!checkStateMask(creature))
-			return INVALIDSTATE;
-
-		if (!checkInvalidLocomotions(creature))
-			return INVALIDLOCOMOTION;
+		if (result != SUCCESS)
+			return result;
 
 		ManagedReference<SceneObject*> object = server->getZoneServer()->getObject(target);
 
@@ -381,7 +377,7 @@ public:
 			}
 		}
 
-		if (!creature->isInRange(targetCreature, range))
+		if (!creature->isInRange(targetCreature, range + creature->getTemplateRadius() + targetCreature->getTemplateRadius()))
 			return TOOFAR;
 
 		if (!canPerformSkill(creature, targetCreature, curePack))
@@ -395,8 +391,10 @@ public:
 
 		deactivateConditionTreatment(creature);
 
-		if (curePack != NULL)
+		if (curePack != NULL) {
+			Locker locker(curePack);
 			curePack->decreaseUseCount();
+		}
 
 		if (targetCreature != creature && !targetCreature->isPet())
 			awardXp(creature, "medical", 50); //No experience for healing yourself or pets.
@@ -412,9 +410,10 @@ public:
 
 		creature->notifyObservers(ObserverEventType::MEDPACKUSED);
 
+		checkForTef(creature, targetCreature);
+
 		return SUCCESS;
 	}
 };
-
 
 #endif /* CURESTATECOMMAND_H_ */

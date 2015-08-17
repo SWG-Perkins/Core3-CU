@@ -1,10 +1,10 @@
-8bba37c was Ivojedi, 9 days ago, message: [Added] cities now check for invalid tax rates on load
-64a7c3f was Ivojedi, 10 days ago, message: [Fixed] cloning now removes pvp tefs
-89cf9c1 was Ivojedi, 10 days ago, message: [Fixed] sometimes being able to enter an opposite faction pvp base while it has turrets up - mantis 6338
-e11181b was Miztahh, 10 days ago, message: [fixed] A few unattackable factional neutral destroy mission npcs - mantis 6336
-9c3f5ce was Andreas Rammhold, 10 days ago, message: [fixed] crash on guildeupdate
-b0c4eab was Ivojedi, 10 days ago, message: [Fixed] talking corpses
-9dd5cd0 was Ivojedi, 10 days ago, message: [Fixed] weapon decay chance no longer rolls twice for sliced/pupped weapons
-b8d0d8a was Miztahh, 10 days ago, message: [removed] Testing npcs from nearby DWB
-30cc2ee was Ivojedi, 10 days ago, message: Merge "[Fixed] income and property taxes being transposed" into publish7
-702f2ba was Andreas Rammhold, 10 days ago, message: [fixed] pointBlank{Area,Single}1 now require RANGEDWEAPON
+dd7bc7a was jay7199, 9 weeks ago, message: [added] Slash commands structure for fixing
+a88b1ae was ValkyraSWG, 9 weeks ago, message: [added] missing hidden files.
+b4f2e9a was ValkyraSWG, 9 weeks ago, message: [fixed] missing file
+7e2e6ab was ValkyraSWG, 9 weeks ago, message: [fixed] Unloadable objects.lua file [disabled] TOCArchive loading debug message
+dbaee6b was ValkyraSWG, 9 weeks ago, message: [added] missing files needed to finish compiling.
+7b4b839 was ValkyraSWG, 9 weeks ago, message: [added] missing makefile.
+d609d6a was ValkyraSWG, 9 weeks ago, message: Fixed the directory structure.
+ad559be was jay7199, 9 weeks ago, message: Deleted extra files.
+5e445c5 was jay7199, 9 weeks ago, message: More imports merging.
+83d9f25 was ValkyraSWG, 9 weeks ago, message: [added] bin and build dirs

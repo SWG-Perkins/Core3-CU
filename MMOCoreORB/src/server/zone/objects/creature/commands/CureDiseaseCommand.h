@@ -53,7 +53,7 @@ class CureDiseaseCommand : public CurePackCommand {
 public:
 
 	CureDiseaseCommand(const String& name, ZoneProcessServer* server)
-		: CurePackCommand(name, server) {
+		: CurePackCommand(name, server)  {
 
 		state = CreatureState::DISEASED;
 	}

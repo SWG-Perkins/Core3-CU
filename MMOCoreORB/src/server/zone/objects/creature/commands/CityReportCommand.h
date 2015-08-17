@@ -15,7 +15,7 @@ public:
 
 
 
-	static int executeCommand(CreatureObject* creature, uint64 target, const UnicodeString& arguments) {
+	static int executeCommand(CreatureObject* creature, uint64 target, const UnicodeString& arguments) const {
 		if (!creature->isPlayerCreature())
 			return 1;
 

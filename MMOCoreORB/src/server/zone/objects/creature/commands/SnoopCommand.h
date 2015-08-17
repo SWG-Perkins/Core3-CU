@@ -1,46 +1,6 @@
 /*
-Copyright (C) 2007 <SWGEmu>
-
-This File is part of Core3.
-
-This program is free software; you can redistribute
-it and/or modify it under the terms of the GNU Lesser
-General Public License as published by the Free Software
-Foundation; either version 2 of the License,
-or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-See the GNU Lesser General Public License for
-more details.
-
-You should have received a copy of the GNU Lesser General
-Public License along with this program; if not, write to
-the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Linking Engine3 statically or dynamically with other modules
-is making a combined work based on Engine3.
-Thus, the terms and conditions of the GNU Lesser General Public License
-cover the whole combination.
-
-In addition, as a special exception, the copyright holders of Engine3
-give you permission to combine Engine3 program with free software
-programs or libraries that are released under the GNU LGPL and with
-code included in the standard release of Core3 under the GNU LGPL
-license (or modified versions of such code, with unchanged license).
-You may copy and distribute such a system following the terms of the
-GNU LGPL for Engine3 and the licenses of the other code concerned,
-provided that you include the source code of that other code when
-and as the GNU LGPL requires distribution of source code.
-
-Note that people who make modified versions of Engine3 are not obligated
-to grant this special exception for their modified versions;
-it is their choice whether to do so. The GNU Lesser General Public License
-gives permission to release a modified version without this exception;
-this exception also makes it possible to release a modified version
-which carries forward this exception.
- */
+				Copyright <SWGEmu>
+		See file COPYING for copying conditions. */
 
 #ifndef SNOOPCOMMAND_H_
 #define SNOOPCOMMAND_H_
@@ -58,7 +18,7 @@ public:
 
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -143,8 +103,30 @@ public:
 			return sendLots(creature, targetObj);
 		} else if (container == "vendors") {
 			return sendVendorInfo(creature, targetObj);
-		}else if( container == "veteranrewards" ){
+		} else if (container == "veteranrewards") {
 			return sendVeteranRewardInfo( creature, targetObj );
+		} else if( container == "faction") {
+			return sendFactionInfo( creature, targetObj );
+		} else if (container == "screenplaystate") {
+			if (!args.hasMoreTokens()) {
+				creature->sendSystemMessage("SYNTAX: /snoop [player] screenplaystate <stateName> [state]");
+				return INVALIDPARAMETERS;
+			}
+			String stateName;
+			args.getStringToken(stateName);
+
+			uint64 state = targetObj->getScreenPlayState(stateName);
+			if (args.hasMoreTokens()) {
+				uint64 stateToCheck = args.getIntToken();
+				if (state & stateToCheck)
+					creature->sendSystemMessage(targetObj->getFirstName() + " state check of '" + String::valueOf(stateToCheck) + "' for screenplayState '" + stateName + "': TRUE.");
+				else
+					creature->sendSystemMessage(targetObj->getFirstName() + " state check of '" + String::valueOf(stateToCheck) + "' for screenplayState '" + stateName + "': FALSE.");
+			} else {
+				creature->sendSystemMessage(targetObj->getFirstName() + " state check for screenplayState '" + stateName + "': " + String::valueOf(state) + ".");
+			}
+		} else if (container == "buffs") {
+			return sendBuffs(creature, targetObj);
 		} else {
 			SceneObject* creatureInventory = targetObj->getSlottedObject("inventory");
 
@@ -160,7 +142,7 @@ public:
 		return SUCCESS;
 	}
 
-	int sendVeteranRewardInfo(CreatureObject* creature, CreatureObject* target) {
+	int sendVeteranRewardInfo(CreatureObject* creature, CreatureObject* target) const {
 		ManagedReference<PlayerObject*> targetGhost = target->getPlayerObject();
 		ManagedReference<PlayerObject*> ghost = creature->getPlayerObject();
 		PlayerManager* playerManager = server->getZoneServer()->getPlayerManager();
@@ -197,7 +179,56 @@ public:
 
 	}
 
-	int sendVendorInfo(CreatureObject* creature, CreatureObject* target) {
+	int sendFactionInfo(CreatureObject* creature, CreatureObject* target) const {
+		ManagedReference<PlayerObject*> targetGhost = target->getPlayerObject();
+		ManagedReference<PlayerObject*> ghost = creature->getPlayerObject();
+		PlayerManager* playerManager = server->getZoneServer()->getPlayerManager();
+
+		if (targetGhost == NULL || ghost == NULL || playerManager == NULL)
+			return GENERALERROR;
+
+		StringBuffer body;
+		body << "Player Name:\t" << target->getFirstName() << endl;
+		body << "Affiliation:\t";
+
+		if (target->isImperial())
+			body << "Imperial";
+		else if (target->isRebel())
+			body << "Rebel";
+		else
+			body << "Neutral" << endl;
+
+		int rank = 0;
+
+		if (target->isImperial() || target->isRebel()) {
+			if (targetGhost->getFactionStatus() == FactionStatus::ONLEAVE)
+				body << " (On Leave)" << endl;
+			else if (targetGhost->getFactionStatus() == FactionStatus::OVERT)
+				body << " (Overt)" << endl;
+			else if (targetGhost->getFactionStatus() == FactionStatus::COVERT)
+				body << " (Covert)" << endl;
+
+			rank = target->getFactionRank();
+			body << "Rank:\t" << FactionManager::instance()->getRankName(rank) << " (Rank " << rank + 1 << ")" << endl;
+		}
+		body << "Imperial Points:\t" << targetGhost->getFactionStanding("imperial") << " (Max: " << (target->isImperial() ? FactionManager::instance()->getFactionPointsCap(rank) : 1000) << ")" << endl;
+		body << "Rebel Points:\t" << targetGhost->getFactionStanding("rebel") << " (Max: " << (target->isRebel() ? FactionManager::instance()->getFactionPointsCap(rank) : 1000) << ")" << endl;
+
+		ManagedReference<SuiMessageBox*> box = new SuiMessageBox(creature, 0);
+		box->setPromptTitle("Faction Information");
+		box->setPromptText(body.toString());
+		box->setUsingObject(target);
+		box->setForceCloseDisabled();
+
+		ghost->addSuiBox(box);
+		creature->sendMessage(box->generateMessage());
+
+		return SUCCESS;
+
+	}
+
+
+	int sendVendorInfo(CreatureObject* creature, CreatureObject* target) const {
 		ManagedReference<PlayerObject*> targetGhost = target->getPlayerObject();
 		ManagedReference<PlayerObject*> ghost = creature->getPlayerObject();
 		ManagedReference<AuctionManager*> auctionManager = server->getZoneServer()->getAuctionManager();
@@ -282,7 +313,7 @@ public:
 		return SUCCESS;
 	}
 
-	int sendLots(CreatureObject* creature, CreatureObject* target) {
+	int sendLots(CreatureObject* creature, CreatureObject* target) const {
 		ManagedReference<PlayerObject*> targetGhost = target->getPlayerObject();
 		ManagedReference<PlayerObject*> ghost = creature->getPlayerObject();
 
@@ -335,7 +366,7 @@ public:
 		return SUCCESS;
 	}
 
-	int sendHam(CreatureObject* creature, CreatureObject* target) {
+	int sendHam(CreatureObject* creature, CreatureObject* target) const {
 		ManagedReference<PlayerObject*> ghost = creature->getPlayerObject();
 
 		if (ghost == NULL) {
@@ -368,6 +399,52 @@ public:
 		ManagedReference<SuiMessageBox*> box = new SuiMessageBox(creature, 0);
 		box->setPromptTitle("Player HAM");
 		box->setPromptText(body.toString());
+		box->setUsingObject(target);
+		box->setForceCloseDisabled();
+
+		ghost->addSuiBox(box);
+		creature->sendMessage(box->generateMessage());
+
+		return SUCCESS;
+	}
+
+	int sendBuffs(CreatureObject* creature, CreatureObject* target) const {
+		ManagedReference<PlayerObject*> ghost = creature->getPlayerObject();
+
+		if (ghost == NULL) {
+			return GENERALERROR;
+		}
+
+		BuffList* bList = target->getBuffList();
+		if (bList == NULL || bList->getBuffListSize() == 0) {
+			creature->sendSystemMessage("No Buffs to Display.");
+			return SUCCESS;
+		}
+
+		StringBuffer buffText;
+
+		for (int i = 0; i < bList->getBuffListSize(); i++) {
+			Buff* buff = bList->getBuffByIndex(i);
+			buffText << buff->getBuffName() << ":" <<endl;
+			buffText << "\tCRC: 0x" << hex << buff->getBuffCRC() << endl;
+
+			Vector<uint64>* secondaryCRCs = buff->getSecondaryBuffCRCs();
+			if (secondaryCRCs != NULL && secondaryCRCs->size() > 0) {
+				buffText << "\tSecondary CRCs: "<< endl;
+				for (int j = 0; j < secondaryCRCs->size(); j++) {
+					buffText << "\t\t 0x" << hex << buff->getSecondaryBuffCRCs() << endl;
+				}
+			}
+
+			buffText << "\tDuration (" << buff->getBuffDuration() << ") Time Left (" << buff->getTimeLeft() << ")" << endl;
+
+			buffText << "\tAttribute Mods: " << buff->getAttributeModifierString() << endl;
+			buffText << "\tSkill Mods: " << buff->getSkillModifierString() << endl;
+		}
+
+		ManagedReference<SuiMessageBox*> box = new SuiMessageBox(creature, 0);
+		box->setPromptTitle("Player HAM");
+		box->setPromptText(buffText.toString());
 		box->setUsingObject(target);
 		box->setForceCloseDisabled();
 

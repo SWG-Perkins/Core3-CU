@@ -318,3 +318,4 @@ class PlanetManager extends ManagedService implements Logger {
 	
 	public native void removePlayerCityTravelPoint(final string cityName);
 }
+

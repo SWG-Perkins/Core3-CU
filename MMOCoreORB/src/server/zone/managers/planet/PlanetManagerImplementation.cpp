@@ -324,12 +324,18 @@ Reference<SceneObject*> PlanetManagerImplementation::loadSnapshotObject(WorldSna
 
 	object = zoneServer->createClientObject(serverTemplate.hashCode(), objectID);
 
+	if(object == NULL) //TODO fix me
+		return NULL;
+
 	object->initializePosition(position.getX(), position.getZ(), position.getY());
 	object->setDirection(node->getDirection());
 
 	if (parentObject != NULL && parentObject->isBuildingObject() && object->isCellObject()) {
 		CellObject* cell = cast<CellObject*>(object.get());
 		BuildingObject* building = cast<BuildingObject*>(parentObject.get());
+
+		Locker locker(building);
+
 		building->addCell(cell, node->getCellID());
 	}
 

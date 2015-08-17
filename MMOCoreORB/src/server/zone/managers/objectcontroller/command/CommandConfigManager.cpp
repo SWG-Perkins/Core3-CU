@@ -349,7 +349,7 @@ void CommandConfigManager::registerSpecialCommands(CommandList* sCommands) {
 	// Fri Oct  7 17:09:26 PDT 2011 - Karl Bunch <karlbunch@karlbunch.com>
 	// Turns out this isn't in the base datatables/command/command_tables_shared.iff file
 	// Meanwhile the client sends this to the server as part of the /logout command sequence
-	QueueCommand* slashCommand = createCommand(String("logout").toLowerCase());
+/*	QueueCommand* slashCommand = createCommand(String("logout").toLowerCase());
 
 	if (slashCommand == NULL) {
 		error("Could not create command /logout");
@@ -388,7 +388,7 @@ void CommandConfigManager::registerSpecialCommands(CommandList* sCommands) {
 	createCommand(String("petHarvest").toLowerCase())->setCommandGroup(0xe1c9a54a);
 	createCommand(String("petPatrol").toLowerCase())->setCommandGroup(0xe1c9a54a);
 	createCommand(String("petClearPatrolPoints").toLowerCase())->setCommandGroup(0xe1c9a54a);
-	createCommand(String("petGetPatrolPoint").toLowerCase())->setCommandGroup(0xe1c9a54a);
+	createCommand(String("petGetPatrolPoint").toLowerCase())->setCommandGroup(0xe1c9a54a);*/
 }
 
 void CommandConfigManager::registerFunctions() {
@@ -990,8 +990,8 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<ForceChokeCommand>(String("ForceChoke").toLowerCase());
 	commandFactory.registerCommand<ForceCloakCommand>(String("ForceCloak").toLowerCase());
 	commandFactory.registerCommand<ForceCommandCommand>(String("ForceCommand").toLowerCase());
-	commandFactory.registerCommand<ForceCureDiseaseCommand>(String("ForceCureDisease").toLowerCase());
-	commandFactory.registerCommand<ForceCurePoisonCommand>(String("ForceCurePoison").toLowerCase());
+	//commandFactory.registerCommand<ForceCureDiseaseCommand>(String("ForceCureDisease").toLowerCase());
+	//commandFactory.registerCommand<ForceCurePoisonCommand>(String("ForceCurePoison").toLowerCase());
 	commandFactory.registerCommand<ForceExtinguishCommand>(String("ForceExtinguish").toLowerCase());
 	commandFactory.registerCommand<ForceFeedbackCommand>(String("ForceFeedback").toLowerCase());
 	commandFactory.registerCommand<ForceHealCommand>(String("ForceHeal").toLowerCase());
@@ -1016,11 +1016,11 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<ForceShockCommand>(String("ForceShock").toLowerCase());
 	commandFactory.registerCommand<ForceSpeedCommand>(String("ForceSpeed").toLowerCase());
 	commandFactory.registerCommand<ForceStrikeCommand>(String("ForceStrike").toLowerCase());
-	commandFactory.registerCommand<ForceSuppressionCommand>(String("ForceSuppression").toLowerCase());
+	//commandFactory.registerCommand<ForceSuppressionCommand>(String("ForceSuppression").toLowerCase());
 	commandFactory.registerCommand<ForceThrowCommand>(String("ForceThrow").toLowerCase());
 	commandFactory.registerCommand<ForceValorCommand>(String("ForceValor").toLowerCase());
-	commandFactory.registerCommand<ForceWaveCommand>(String("ForceWave").toLowerCase());
-	commandFactory.registerCommand<ForceWeakenCommand>(String("ForceWeaken").toLowerCase());
+	//commandFactory.registerCommand<ForceWaveCommand>(String("ForceWave").toLowerCase());
+	//commandFactory.registerCommand<ForceWeakenCommand>(String("ForceWeaken").toLowerCase());
 	commandFactory.registerCommand<ForceWoundHealCommand>(String("ForceWoundHeal").toLowerCase());
 	commandFactory.registerCommand<FormupCommand>(String("Formup").toLowerCase());
 	commandFactory.registerCommand<FreezePlayerCommand>(String("FreezePlayer").toLowerCase());
@@ -1085,9 +1085,9 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<HaveconsentCommand>(String("Haveconsent").toLowerCase());
 	commandFactory.registerCommand<HeadHitCommand>(String("HeadHit").toLowerCase());
 	commandFactory.registerCommand<HeadShotCommand>(String("HeadShot").toLowerCase());
-	commandFactory.registerCommand<HealDroidDamageCommand>(String("HealDroidDamage").toLowerCase());
-	commandFactory.registerCommand<HealDroidWoundCommand>(String("HealDroidWound").toLowerCase());
-	commandFactory.registerCommand<HealPetCommand>(String("HealPet").toLowerCase());
+	//commandFactory.registerCommand<HealDroidDamageCommand>(String("HealDroidDamage").toLowerCase());
+	//commandFactory.registerCommand<HealDroidWoundCommand>(String("HealDroidWound").toLowerCase());
+	//commandFactory.registerCommand<HealPetCommand>(String("HealPet").toLowerCase());
 	commandFactory.registerCommand<HealStateCommand>(String("HealState").toLowerCase());
 	commandFactory.registerCommand<HealStatesCommand>(String("HealStates").toLowerCase());
 	commandFactory.registerCommand<HealWoundCommand>(String("HealWound").toLowerCase());
@@ -1309,8 +1309,8 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<RolePlayCommand>(String("RolePlay").toLowerCase());
 	commandFactory.registerCommand<RollShotCommand>(String("RollShot").toLowerCase());
 	commandFactory.registerCommand<RotateFurnitureCommand>(String("RotateFurniture").toLowerCase());
-	commandFactory.registerCommand<SaberArmorBreakCommand>(String("SaberArmorBreak").toLowerCase());
-	commandFactory.registerCommand<SaberBlindCommand>(String("SaberBlind").toLowerCase());
+	//commandFactory.registerCommand<SaberArmorBreakCommand>(String("SaberArmorBreak").toLowerCase());
+	/*commandFactory.registerCommand<SaberBlindCommand>(String("SaberBlind").toLowerCase());
 	commandFactory.registerCommand<SaberBodyHitCommand>(String("SaberBodyHit").toLowerCase());
 	commandFactory.registerCommand<SaberDervishCommand>(String("SaberDervish").toLowerCase());
 	commandFactory.registerCommand<SaberHeadHitCommand>(String("SaberHeadHit").toLowerCase());
@@ -1323,7 +1323,7 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<SaberStunStrikeCommand>(String("SaberStunStrike").toLowerCase());
 	commandFactory.registerCommand<SaberSweepCommand>(String("SaberSweep").toLowerCase());
 	commandFactory.registerCommand<SaberSwipeCommand>(String("SaberSwipe").toLowerCase());
-	commandFactory.registerCommand<SaberThrowCommand>(String("SaberThrow").toLowerCase());
+	commandFactory.registerCommand<SaberThrowCommand>(String("SaberThrow").toLowerCase());*/
 	commandFactory.registerCommand<SampleCommand>(String("Sample").toLowerCase());
 	commandFactory.registerCommand<SampleDNACommand>(String("SampleDNA").toLowerCase());
 	commandFactory.registerCommand<ScatterHitCommand>(String("ScatterHit").toLowerCase());
@@ -1431,7 +1431,7 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<StartTargetSpawnerCommand>(String("StartTargetSpawner").toLowerCase());
 	commandFactory.registerCommand<StartTraceLoggingCommand>(String("StartTraceLogging").toLowerCase());
 	commandFactory.registerCommand<StartleShotCommand>(String("StartleShot").toLowerCase());
-	commandFactory.registerCommand<StasisCommand>(String("Stasis").toLowerCase());
+	//commandFactory.registerCommand<StasisCommand>(String("Stasis").toLowerCase());
 	commandFactory.registerCommand<StatCommand>(String("Stat").toLowerCase());
 	commandFactory.registerCommand<SteadyaimCommand>(String("Steadyaim").toLowerCase());
 	commandFactory.registerCommand<StopBandCommand>(String("StopBand").toLowerCase());
@@ -1499,7 +1499,7 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<TurretFireCommand>(String("TurretFire").toLowerCase());
 	commandFactory.registerCommand<TurretFireManualCommand>(String("TurretFireManual").toLowerCase());
 	commandFactory.registerCommand<TurretShotCommand>(String("TurretShot").toLowerCase());
-	commandFactory.registerCommand<UnCityBanCommand>(String("UnCityBan").toLowerCase());
+	/*commandFactory.registerCommand<UnCityBanCommand>(String("UnCityBan").toLowerCase());
 	commandFactory.registerCommand<UnassociateDroidControlDeviceWithShipCommand>(String("UnassociateDroidControlDeviceWithShip").toLowerCase());
 	commandFactory.registerCommand<UnconsentCommand>(String("Unconsent").toLowerCase());
 	commandFactory.registerCommand<UnderHandShotCommand>(String("UnderHandShot").toLowerCase());
@@ -1517,15 +1517,15 @@ void CommandConfigManager::registerCommands() {
 	commandFactory.registerCommand<VerbalAssaultCommand>(String("VerbalAssault").toLowerCase());
 	commandFactory.registerCommand<VertFurnitureCommand>(String("VertFurniture").toLowerCase());
 	commandFactory.registerCommand<VitalizeCommand>(String("Vitalize").toLowerCase());
-	commandFactory.registerCommand<VolleyFireAttackCommand>(String("VolleyFireAttack").toLowerCase());
+	commandFactory.registerCommand<VolleyFireAttackCommand>(String("VolleyFireAttack").toLowerCase()); */
 	commandFactory.registerCommand<VolleyFireCommand>(String("VolleyFire").toLowerCase());
-	commandFactory.registerCommand<VrepairCommand>(String("Vrepair").toLowerCase());
+/*	commandFactory.registerCommand<VrepairCommand>(String("Vrepair").toLowerCase());
 	commandFactory.registerCommand<VrepairotherCommand>(String("Vrepairother").toLowerCase());
 	commandFactory.registerCommand<WarcryCommand>(String("Warcry").toLowerCase());
 	commandFactory.registerCommand<WarningShotCommand>(String("WarningShot").toLowerCase());
 	commandFactory.registerCommand<WatchCommand>(String("Watch").toLowerCase());
 	commandFactory.registerCommand<WaypointCommand>(String("Waypoint").toLowerCase());
 	commandFactory.registerCommand<WipeItemsCommand>(String("WipeItems").toLowerCase());
-	commandFactory.registerCommand<WookieeRoarCommand>(String("WookieeRoar").toLowerCase());
+	commandFactory.registerCommand<WookieeRoarCommand>(String("WookieeRoar").toLowerCase());*/
 
 }
