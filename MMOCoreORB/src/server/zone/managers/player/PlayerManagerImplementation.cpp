@@ -3347,71 +3347,7 @@ void PlayerManagerImplementation::clearOwnedStructuresPermissions(CreatureObject
 }
 
 void PlayerManagerImplementation::fixHAM(CreatureObject* player) {
-	Locker locker(player);
-
-	try {
-		BuffList* buffs = player->getBuffList();
-
-		VectorMap<byte, int> attributeValues;
-		attributeValues.setNullValue(0);
-		attributeValues.setAllowOverwriteInsertPlan();
-
-		ManagedReference<Buff*> powerBoost;
-
-		//check buffs
-		for (int i = 0; i < buffs->getBuffListSize(); ++i) {
-			ManagedReference<Buff*> buff = buffs->getBuffByIndex(i);
-
-			PowerBoostBuff* power = dynamic_cast<PowerBoostBuff*>(buff.get());
-
-			if (power != NULL) {
-				powerBoost = power;
-				continue;
-			}
-
-			VectorMap<byte, int>* attributeModifiers = buff->getAttributeModifiers();
-
-			for (int j = 0; j < attributeModifiers->size(); ++j) {
-				byte modifier = attributeModifiers->elementAt(j).getKey();
-				int val = attributeModifiers->elementAt(j).getValue();
-
-				attributeValues.put(modifier, attributeValues.get(modifier) + val);
-			}
-		}
-
-		if (powerBoost != NULL) {
-			Locker buffLocker(powerBoost);
-
-			player->removeBuff(powerBoost);
-		}
-
-		int encumbranceType = -1;
-
-		for (int i = 0; i < 9; ++i) {
-			int maxModifier = attributeValues.get((byte)i);
-			int baseHam = player->getBaseHAM(i);
-			int max = player->getMaxHAM(i);
-
-			int calculated = baseHam + maxModifier;
-
-			if (i % 3 == 0) {
-				++encumbranceType;
-			} else {
-				calculated -= player->getEncumbrance(encumbranceType);
-			}
-
-			//info("attribute: " + CreatureAttribute::getName(i, true) + " max = " + String::valueOf(max) + " calculatedMax = " + String::valueOf(calculated), true);
-
-			if (calculated != max && calculated > 1) {
-				if (player->getHAM(i) > calculated)
-					player->setHAM(i, calculated, false);
-
-				player->setMaxHAM(i, calculated, false);
-			}
-		}
-	} catch (Exception& e) {
-		error(e.getMessage());
-	}
+	// unused.
 }
 
 void PlayerManagerImplementation::fixBuffSkillMods(CreatureObject* player) {

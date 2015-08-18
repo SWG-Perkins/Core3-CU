@@ -15,15 +15,6 @@ class WeaponObjectMessage6 : public TangibleObjectMessage6 {
 public:
 	WeaponObjectMessage6(TangibleObject* tano)
 			: TangibleObjectMessage6(tano, 0x5745414F) {
-
-		insertByte(0x06);
-		insertInt(0);
-		insertShort(0x04);
-
-		insertByte(0);
-		insertShort(0);
-		insertFloat(0);
-
 		setSize();
 	}
 

@@ -38,7 +38,10 @@ void AbilityList::insertToMessage(BaseMessage* msg) {
 	for (int i = 0; i < size(); ++i) {
 		Reference<Ability*> ability = get(i);
 
+		msg->insertByte(0);
 		msg->insertAscii(ability->getAbilityName());
+		// Enabled ???
+		msg->insertInt(1);
 	}
 }
 

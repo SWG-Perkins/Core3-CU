@@ -2,47 +2,6 @@
  				Copyright <SWGEmu>
 		See file COPYING for copying conditions. */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include "server/zone/objects/creature/CreatureObject.h"
 #include "CreatureState.h"
 #include "CreatureFlag.h"
@@ -256,6 +215,7 @@ void CreatureObjectImplementation::loadTemplateData(
 		baseHAM.add(base.get(i));
 
 	wounds.removeAll();
+
 	for (int i = 0; i < 1; ++i) {
 		wounds.add(0);
 	}
@@ -323,7 +283,7 @@ void CreatureObjectImplementation::sendToOwner(bool doClose) {
 
 	ManagedReference<GuildManager*> guildManager =
 			server->getZoneServer()->getGuildManager();
-	guildManager->sendBaselinesTo(asCreatureObject());
+	//guildManager->sendBaselinesTo(asCreatureObject());
 
 	ManagedReference<SceneObject*> grandParent = getRootParent();
 

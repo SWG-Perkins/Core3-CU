@@ -60,22 +60,25 @@ public:
 	CmdStartScene(CreatureObject* creo) : BaseMessage(50) {
 		Zone* zone = creo->getZone();
 
-		insertShort(0x09);
+		insertShort(0x08);
 		insertInt(0x3AE6DFAE);
-		insertByte(0);
-		insertLong(creo->getObjectID());
-	 	insertAscii("terrain/" + zone->getZoneName() + ".trn"); //terrain name
-	 	insertFloat(creo->getPositionX()); //X
-	 	insertFloat(creo->getPositionZ()); //Z
-	 	insertFloat(creo->getPositionY()); //Y
-	 	insertFloat(creo->getSpecialDirectionAngle()); //Orientation - CU thing
+		insertByte(0); // Disable World Snapshot
+		insertLong(creo->getObjectID()); // Object ID
+	 	insertAscii("terrain/" + zone->getZoneName() + ".trn"); //Scene Name
+	 	insertFloat(creo->getPositionX()); // Start Position X
+	 	insertFloat(creo->getPositionZ()); // Start Position Z
+	 	insertFloat(creo->getPositionY()); // Start Position Y
+	 	insertFloat(creo->getSpecialDirectionAngle()); // Start Yaw (orientation)
 	 	
 	 	//TODO: This should be deprecated when possible.
 		uint32 crc = creo->getClientObjectCRC();
 		String file = TemplateManager::instance()->getTemplateFile(crc);
 	 	insertAscii(file);
 	 	
-	 	insertLong(zone->getGalacticTime()); //galactic time
+	 	insertLong(zone->getGalacticTime()); //scene time seconds
+
+	 	Time currentTime;
+	 	insertInt(currentTime.getTime()); // server epoch
 	}
 
 	static void parse(Packet* pack) {
