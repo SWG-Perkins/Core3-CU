@@ -733,10 +733,11 @@ String TemplateManager::getTemplateFile(uint32 key) {
 	if (templateData == NULL) {
 		String ascii = clientTemplateCRCMap->get(key);
 
-		if (ascii.isEmpty())
-			throw Exception("TemplateManager::getTemplateFile exception unknown template key 0x" + String::hexvalueOf((int)key));
-		else
-			return ascii;
+		if (ascii.isEmpty()){
+			error("TemplateManager::getTemplateFile exception unknown template key 0x" + String::hexvalueOf((int)key));
+		}
+
+		return ascii;
 	}
 
 	return templateData->getFullTemplateString();
@@ -967,7 +968,7 @@ int TemplateManager::addTemplateCRC(lua_State* L) {
 
 	TemplateManager::instance()->addTemplate(crc, ascii, &obj);
 
-//	uint64 seconds = Logger::getElapsedTime();
+	//	uint64 seconds = Logger::getElapsedTime();
 
 	int val = loadedTemplatesCount.increment();
 

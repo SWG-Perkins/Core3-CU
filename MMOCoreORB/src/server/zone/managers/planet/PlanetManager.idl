@@ -37,6 +37,9 @@ import server.zone.objects.area.ActiveArea;
 import system.thread.Mutex;
 import engine.util.u3d.CloseObjectsVector;
 include server.zone.managers.collision.IntersectionResults;
+include server.zone.templates.buildout.BuildoutArea;
+include server.zone.templates.buildout.BuildoutRow;
+include server.zone.templates.datatables.DataTableRow;
 
 class PlanetManager extends ManagedService implements Logger {
 	protected Zone zone;
@@ -116,7 +119,18 @@ class PlanetManager extends ManagedService implements Logger {
 	@local
 	@reference
 	private native SceneObject loadSnapshotObject(WorldSnapshotNode node, WorldSnapshotIff wsiff, @dereferenced int totalObjects);
+
 	private native void loadSnapshotObjects();
+
+	@local
+	@reference
+	private native SceneObject loadBuildoutObject(DataTableRow dtRow, BuildoutArea areaIff);
+
+	@local
+	@dereferenced
+	private native Vector<SceneObject> loadBuildoutArea(final string areaName, final string terrainName);
+
+	private native void loadBuildoutObjects(final string terrainName);
 	private native void loadTravelFares();
 	
 	@local
@@ -318,4 +332,3 @@ class PlanetManager extends ManagedService implements Logger {
 	
 	public native void removePlayerCityTravelPoint(final string cityName);
 }
-
