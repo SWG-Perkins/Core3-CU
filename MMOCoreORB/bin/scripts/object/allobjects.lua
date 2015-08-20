@@ -97,7 +97,6 @@ includeFile("building/poi/hq/objects.lua")
 includeFile("building/poi/objects.lua")
 includeFile("building/tatooine/objects.lua")
 includeFile("building/yavin/objects.lua")
-includeFile("building/mustafar/structures/objects.lua")
 includeFile("building/objects.lua")
 includeFile("cell/base/objects.lua")
 includeFile("cell/objects.lua")
@@ -838,3 +837,6 @@ includeFile("weapon/ranged/objects.lua")
 includeFile("weapon/trap/objects.lua")
 includeFile("weapon/objects.lua")
 
+-- CUEmu Buildings
+
+includeFile("building/mustafar/structures/cu_objects.lua")
