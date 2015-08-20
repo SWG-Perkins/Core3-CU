@@ -2,47 +2,6 @@
  				Copyright <SWGEmu>
 		See file COPYING for copying conditions. */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include "server/zone/objects/creature/CreatureObject.h"
 #include "CreatureState.h"
 #include "CreatureFlag.h"
@@ -256,6 +215,7 @@ void CreatureObjectImplementation::loadTemplateData(
 		baseHAM.add(base.get(i));
 
 	wounds.removeAll();
+
 	for (int i = 0; i < 1; ++i) {
 		wounds.add(0);
 	}
@@ -323,7 +283,7 @@ void CreatureObjectImplementation::sendToOwner(bool doClose) {
 
 	ManagedReference<GuildManager*> guildManager =
 			server->getZoneServer()->getGuildManager();
-	guildManager->sendBaselinesTo(asCreatureObject());
+	//guildManager->sendBaselinesTo(asCreatureObject());
 
 	ManagedReference<SceneObject*> grandParent = getRootParent();
 
@@ -1318,15 +1278,14 @@ void CreatureObjectImplementation::setMaxHAM(int type, int value,
 	if (maxHamList.get(type) == value)
 		return;
 
-	/*StringBuffer msg;
-	 msg << "setting maxham type " << type << " to " << value;
-	 info(msg.toString(), true);*/
+	StringBuffer msg;
+	msg << "setting maxham type " << type << " to " << value;
+	//info(msg.toString(), true);
 
 	if (notifyClient) {
 		CreatureObjectDeltaMessage6* msg = new CreatureObjectDeltaMessage6(
-				asCreatureObject());
-
-		msg->startUpdate(0x0E);
+				_this.get());
+		msg->startUpdate(0x0F);
 		maxHamList.set(type, value, msg);
 		msg->close();
 
@@ -1334,14 +1293,6 @@ void CreatureObjectImplementation::setMaxHAM(int type, int value,
 	} else {
 		maxHamList.set(type, value, NULL);
 	}
-
-	if (wounds.get(type) >= maxHamList.get(type)) // this will reset our wounds to not overflow max value
-		setWounds(type, wounds.get(type), notifyClient);
-
-	if (type % 3 != 0) { //changing secondary stats, updating current value
-		healDamage(asCreatureObject(), type, value - hamList.get(type), notifyClient);
-	}
-
 }
 
 void CreatureObjectImplementation::setEncumbrance(int type, int value,
@@ -2649,79 +2600,43 @@ void CreatureObjectImplementation::activateHAMRegeneration() {
 	if (isIncapacitated() || isDead())
 		return;
 
-	float modifier = 1.f;// (isInCombat()) ? 1.f : 1.f;
+	float modifier = (isInCombat()) ? 0.2f : 1.f;
 
 	if (isKneeling())
 		modifier *= (1.5);
 	else if (isSitting())
 		modifier *= (2);
 
-	if (!isPlayerCreature() && isInCombat())
-		return;
+	if (!isPlayerCreature())
+		modifier /= 3.0f;
 
 
 
-	uint32 healthTick = (uint32) ceil((float) MAX(0, getHAM(
-			CreatureAttribute::CONSTITUTION)) * 13.0f / 1200.0f * 3.0f
-			* modifier);
 
-	uint32 actionTick = (uint32) ceil((float) MAX(0, getHAM(
-			CreatureAttribute::STAMINA)) * 13.0f / 1200.0f * 3.0f * modifier);
-
-
-	uint32 mindTick = (uint32) ceil((float) MAX(0, getHAM(
-			CreatureAttribute::WILLPOWER)) * 13.0f / 1200.0f * 3.0f * modifier);
-
+	uint32 healthTick = (uint32) ceil((float) MAX(0, getHAM(CreatureAttribute::CONSTITUTION)) * 13.0f / 1200.0f * 3.0f * modifier);
 
 	if (healthTick < 1)
 		healthTick = 1;
 
-	if (actionTick < 1)
-		actionTick = 1;
+	uint32 actualHTick = round(healthTick);
 
-	if (mindTick < 1)
-		mindTick = 1;
+	healDamage(asCreatureObject(), CreatureAttribute::HEALTH, actualHTick, true, false);
 
+	if (!isPlayerCreature()) {
+		uint32 actionTick = (uint32) ceil((float) MAX(0, getHAM(CreatureAttribute::STAMINA)) * 13.0f / 1200.0f * 3.0f);
+		uint32 mindTick = (uint32) ceil((float) MAX(0, getHAM(CreatureAttribute::WILLPOWER)) * 13.0f / 1200.0f * 3.0f);
 
+		if (actionTick < 1)
+			actionTick = 1;
 
+		if (mindTick < 1)
+			mindTick = 1;
 
-
-
-	healDamage(asCreatureObject(), CreatureAttribute::HEALTH, healthTick, true, false);
-	healDamage(asCreatureObject(), CreatureAttribute::ACTION, actionTick, true, false);
-	healDamage(asCreatureObject(), CreatureAttribute::MIND, mindTick, true, false);
-
+		healDamage(asCreatureObject(), CreatureAttribute::ACTION, actionTick, true, false);
+		healDamage(asCreatureObject(), CreatureAttribute::MIND, mindTick, true, false);
+	}
 
 	activatePassiveWoundRegeneration();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

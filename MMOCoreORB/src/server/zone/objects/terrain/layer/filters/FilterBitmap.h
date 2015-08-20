@@ -34,6 +34,7 @@ public:
 		iffStream->openForm(version);
 
 		switch (version) {
+		case '0001':
 		case '0000':
 			parseFromIffStream(iffStream, Version<'0000'>());
 			break;

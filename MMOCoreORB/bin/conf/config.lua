@@ -60,7 +60,7 @@ DBSecret = "swgemus3cr37!" -- Change this! This value should be unique and of re
 LoginPort = 44453
 LoginProcessingThreads = 1
 LoginAllowedConnections = 3000
-LoginRequiredVersion = "20050408-18:00"
+LoginRequiredVersion = "20051010-17:00"
 
 MantisHost = "127.0.0.1"
 MantisPort = 3306
@@ -92,7 +92,7 @@ ZonesEnabled = {
 	--"cinco_city_test_m5",
 	--"corellia",
 	--"creature_test",
-	--"dantooine",
+	"dantooine",
 	--"dathomir",
 	--"dungeon1",
 	--"endor",

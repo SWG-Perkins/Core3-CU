@@ -196,7 +196,7 @@ public:
 		float z = planetManager->findClosestWorldFloor(positionX, positionY, positionZ, object->getSwimHeight(), &intersections, (CloseObjectsVector*) object->getCloseObjects());
 
 		if (z != positionZ) {
-			positionZ = z;
+			//positionZ = z;
 		}
 
 		ValidatedPosition pos;

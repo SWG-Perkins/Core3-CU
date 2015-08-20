@@ -143,6 +143,7 @@ void PlanetManagerImplementation::loadLuaConfig() {
 		planetTravelPointsTable.pop();
 
 		loadSnapshotObjects();
+		loadBuildoutObjects(planetName);
 
 		LuaObject planetObjectsTable = luaObject.getObjectField("planetObjects");
 		loadPlanetObjects(&planetObjectsTable);
@@ -155,23 +156,23 @@ void PlanetManagerImplementation::loadLuaConfig() {
 
 	// Configure shuttleport timing
 	if ((shuttleportAwayTime = lua->getGlobalInt("shuttleportAwayTime")) <= 0)
-	  shuttleportAwayTime = 300;
+		shuttleportAwayTime = 300;
 
 	if ((shuttleportLandedTime = lua->getGlobalInt("shuttleportLandedTime")) <= 0)
-	  shuttleportLandedTime = 120;
+		shuttleportLandedTime = 120;
 
 	if ((shuttleportLandingTime = lua->getGlobalInt("shuttleportLandingTime")) <= 0)
-	  shuttleportLandingTime = 11;
+		shuttleportLandingTime = 11;
 
 	// Configure starport timing
 	if ((starportAwayTime = lua->getGlobalInt("starportAwayTime")) <= 0)
-	  starportAwayTime = 60;
+		starportAwayTime = 60;
 
 	if ((starportLandedTime = lua->getGlobalInt("starportLandedTime")) <= 0)
-	  starportLandedTime = 120;
+		starportLandedTime = 120;
 
 	if ((starportLandingTime = lua->getGlobalInt("starportLandingTime")) <= 0)
-	  starportLandingTime = 120;
+		starportLandingTime = 120;
 
 	lua->runFile("scripts/managers/spawn_manager/" + zone->getZoneName() + ".lua");
 
@@ -324,12 +325,18 @@ Reference<SceneObject*> PlanetManagerImplementation::loadSnapshotObject(WorldSna
 
 	object = zoneServer->createClientObject(serverTemplate.hashCode(), objectID);
 
+	if (object == NULL)
+		return NULL;
+
 	object->initializePosition(position.getX(), position.getZ(), position.getY());
 	object->setDirection(node->getDirection());
 
 	if (parentObject != NULL && parentObject->isBuildingObject() && object->isCellObject()) {
 		CellObject* cell = cast<CellObject*>(object.get());
 		BuildingObject* building = cast<BuildingObject*>(parentObject.get());
+
+		Locker locker(building);
+
 		building->addCell(cell, node->getCellID());
 	}
 
@@ -396,6 +403,164 @@ void PlanetManagerImplementation::loadSnapshotObjects() {
 
 	printf("\n");
 	info("Loaded " + String::valueOf(totalObjects) + " client objects from world snapshot.", true);
+}
+
+Reference<SceneObject*> PlanetManagerImplementation::loadBuildoutObject(DataTableRow* dtRow, BuildoutArea* areaIff) {
+	BuildoutRow* buildoutRow = new BuildoutRow();
+
+	if (dtRow->getCellsSize() == 11)
+		buildoutRow->parse(dtRow, 0);
+	else if (dtRow->getCellsSize() == 14)
+		buildoutRow->parse(dtRow, 3);
+
+	ZoneServer* zoneServer = server->getZoneServer();
+
+	int totalObjects = 0;
+
+	TemplateManager* templateManager = TemplateManager::instance();
+
+	String templateName = templateManager->getTemplateFile(buildoutRow->sharedTemplateCrc);
+
+	if (templateName.isEmpty()){
+		return NULL;
+	}
+
+	String serverTemplate = templateName.replaceFirst("shared_", "");
+
+	Reference<SceneObject*> object = zoneServer->createObject(STRING_HASHCODE(serverTemplate));
+
+	if (object == NULL)
+		return NULL;
+
+	object->setDirection(buildoutRow->setOrientationW, buildoutRow->setOrientationX, buildoutRow->setOrientationY, buildoutRow->setOrientationZ);
+
+	if (buildoutRow->portalLayoutCrc != 0) { // is building
+		areaIff->buildingObjectId = object->getObjectID();
+
+		float x = buildoutRow->setX + areaIff->getX1();
+		float z = buildoutRow->setZ + areaIff->getZ1();
+
+		object->initializePosition(x, buildoutRow->setY, z);
+
+		Locker clocker(object);
+
+		zone->transferObject(object, -1, true);
+		object->createChildObjects();
+
+	} else if (buildoutRow->sharedTemplateCrc == STRING_HASHCODE("object/cell/shared_cell.iff")) {
+		CellObject* cell = cast<CellObject*>(object.get());
+		Reference<SceneObject*> check = zoneServer->getObject(areaIff->buildingObjectId);
+
+		if (check == NULL) {
+			//error("Couldn't find building parent.");
+			return NULL;
+		}
+
+		Locker locker(check);
+
+		check->transferObject(cell, -1);
+		check.castTo<BuildingObject*>()->addCell(cell, (uint32)buildoutRow->cellIndex);
+	} else if (buildoutRow->cellIndex > 0) { // is in cell
+		Reference<SceneObject*> buildingObject = zoneServer->getObject(	areaIff->buildingObjectId);
+		CellObject* cell = buildingObject.castTo<BuildingObject*>().get()->getCell(buildoutRow->cellIndex);
+
+		object->initializePosition(buildoutRow->setX, buildoutRow->setY, buildoutRow->setZ);
+
+		if (cell->getParentID() == 	areaIff->buildingObjectId)
+			cell->transferObject(object.get(), -1);
+	} else {
+		Locker clocker(object);
+		object->initializePosition(buildoutRow->setX + areaIff->getX1(), buildoutRow->setZ + areaIff->getZ1(),  buildoutRow->setY);
+		zone->transferObject(object, -1, true);
+	}
+
+	++totalObjects;
+
+	if (ConfigManager::instance()->isProgressMonitorActivated())
+		printf("\r\t Loading buildout area objects: [%d] / [?]\t", totalObjects);
+
+	delete buildoutRow;
+
+	return object;
+
+}
+
+Vector<ManagedReference<SceneObject*> > PlanetManagerImplementation::loadBuildoutArea(const String& areaName, const String& terrainName) {
+	Vector<ManagedReference<SceneObject*> > returnVector;
+
+	TemplateManager* templateManager = TemplateManager::instance();
+
+	IffStream* iffStream = templateManager->openIffFile(areaName);
+
+	if (iffStream == NULL) {
+		info("Buildout areas information not found for loading object.", true);
+		return returnVector;
+	}
+
+	DataTableIff dataIff;
+	dataIff.readObject(iffStream);
+
+	for (int i=0; i < dataIff.getTotalRows(); ++i) {
+		BuildoutArea* areaiff = new BuildoutArea();
+		areaiff->parse(dataIff.getRow(i));
+
+		String file = "datatables/buildout/" + terrainName + "/" + areaiff->getName() + ".iff";
+
+		IffStream* iffStream2 = templateManager->openIffFile(file);
+
+		if (iffStream2 == NULL) {
+			info("Buildout area information not found.", true);
+			continue;
+		}
+
+		Logger::console.info("Opening " + file, true);
+
+
+		DataTableIff buildoutiff;
+		buildoutiff.readObject(iffStream2);
+
+		for (int j=0; j < buildoutiff.getTotalRows(); ++j) {
+			returnVector.add(loadBuildoutObject(buildoutiff.getRow(j), areaiff));
+		}
+
+		delete iffStream2;
+	}
+
+	delete iffStream;
+	return returnVector;
+}
+
+void PlanetManagerImplementation::loadBuildoutObjects(const String& terrainName) {
+	TemplateManager* templateManager = TemplateManager::instance();
+
+	IffStream* iffStream = templateManager->openIffFile("datatables/buildout/buildout_scenes.iff");
+
+	if (iffStream == NULL) {
+		info("Buildout scene information not found.", true);
+		return;
+	}
+
+	DataTableIff boiff;
+	boiff.readObject(iffStream);
+
+	int totalObjects = 0;
+	Vector<ManagedReference<SceneObject*> > load;
+
+	for (int i=0; i < boiff.getTotalRows(); ++i) {
+		DataTableRow* row = boiff.getRow(i);
+		String name;
+		row->getCell(0)->getValue(name);
+
+		if (name == terrainName) {
+			load = loadBuildoutArea("datatables/buildout/areas_" + terrainName + ".iff", terrainName);
+			totalObjects += load.size();
+		}
+	}
+
+	printf("\n");
+	info("Loaded " + String::valueOf(totalObjects) + " client objects from buildout.", true);
+
+	delete iffStream;
 }
 
 bool PlanetManagerImplementation::isTravelToLocationPermitted(const String& departurePoint, const String& arrivalPlanet, const String& arrivalPoint) {
@@ -844,7 +1009,7 @@ bool PlanetManagerImplementation::isCampingPermittedAt(float x, float y, float m
 
 		// Honor no-build after checking for areas that camping is explicitly allowed
 		if (area->isNoBuildArea()) {
-				return false;
+			return false;
 		}
 	}
 
@@ -881,7 +1046,7 @@ Reference<SceneObject*> PlanetManagerImplementation::findObjectTooCloseToDecorat
 		}
 
 		if(obj->isStructureObject() && StructureManager::instance()->isInStructureFootprint(cast<StructureObject*>(obj.get()), x, y, margin) ){
-				return obj;
+			return obj;
 		}
 	}
 
@@ -974,10 +1139,10 @@ float PlanetManagerImplementation::findClosestWorldFloor(float x, float y, float
 
 	Reference<IntersectionResults*> ref;
 
-    if (intersections == NULL) {
-    	ref = intersections = new IntersectionResults();
-    	CollisionManager::getWorldFloorCollisions(x, y, zone, intersections, closeObjects);
-    }
+	if (intersections == NULL) {
+		ref = intersections = new IntersectionResults();
+		CollisionManager::getWorldFloorCollisions(x, y, zone, intersections, closeObjects);
+	}
 
 	float terrainHeight = zone->getHeight(x, y);
 	float diff = fabs(z - terrainHeight);

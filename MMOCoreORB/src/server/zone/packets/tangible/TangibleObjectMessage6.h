@@ -57,9 +57,9 @@ public:
 
 		if (tano->isCreatureObject()){
 			insertInt(0x3d);
+			insertInt(0);
+			insertInt(0);
 
-			insertInt(0);
-			insertInt(0);
 		} if (!tano->isCreatureObject()){
 			insertInt(0x76); // 0x3D in creos
 
@@ -85,8 +85,6 @@ public:
 			insertInt(0);
 			insertInt(0);
 		}
-
-
 
 		setSize();
 	}

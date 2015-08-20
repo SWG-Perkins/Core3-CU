@@ -15,7 +15,7 @@ public:
 		forceCost = 0;
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -26,12 +26,12 @@ public:
 		if (isWearingArmor(creature))
 			return NOJEDIARMOR;
 
-		if (name.contains("_2"))
-			forceCost = 200;
-		else if (name.contains("_1"))
-			forceCost = 150;
-		else
-			forceCost = 100;
+	//	if (name.contains("_2"))
+			//forceCost = 200;
+		//else if (name.contains("_1"))
+			//forceCost = 150;
+		//else
+			//forceCost = 100;
 
 		if (!creature->hasBuff(nameCRC)) {
 

@@ -50,7 +50,7 @@ public:
 		return true;
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -87,8 +87,8 @@ public:
 		if (!creature->isInRange(creatureTarget, range))
 			return TOOFAR;
 
-		if (!canPerformSkill(creature, creatureTarget))
-			return GENERALERROR;
+	//	if (!canPerformSkill(creature, creatureTarget))
+	//		return GENERALERROR;
 
 		ManagedReference<PlayerObject*> playerObject = creature->getPlayerObject();
 
@@ -97,12 +97,12 @@ public:
 			return GENERALERROR;
 		}
 
-		if (playerObject->hasAbility("forceHeal_2"))
-			healthHealed = creatureTarget->healDamage(creature, CreatureAttribute::HEALTH, 1500);
-		else if (playerObject->hasAbility("forceHeal_1"))
-			healthHealed = creatureTarget->healDamage(creature, CreatureAttribute::HEALTH, 1000);
-		else
-			healthHealed = creatureTarget->healDamage(creature, CreatureAttribute::HEALTH, 500);
+		//if (playerObject->hasAbility("forceHeal_2"))
+		//	healthHealed = creatureTarget->healDamage(creature, CreatureAttribute::HEALTH, 1500);
+		//else if (playerObject->hasAbility("forceHeal_1"))
+		//	healthHealed = creatureTarget->healDamage(creature, CreatureAttribute::HEALTH, 1000);
+		//else
+		//	healthHealed = creatureTarget->healDamage(creature, CreatureAttribute::HEALTH, 500);
 
 		if (healthHealed > 0) {
 			if (creature != creatureTarget) {
@@ -130,7 +130,7 @@ public:
 		else
 			creature->playEffect("clienteffect/pl_force_healing.cef");
 
-		forceCost = MIN((healthHealed / 15), 100);
+	//	forceCost = MIN((healthHealed / 15), 100);
 		playerObject->setForcePower(playerObject->getForcePower() - forceCost);
 
 		return SUCCESS;

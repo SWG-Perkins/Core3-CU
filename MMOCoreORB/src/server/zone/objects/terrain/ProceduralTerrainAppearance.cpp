@@ -84,6 +84,7 @@ void ProceduralTerrainAppearance::parseFromIffStream(engine::util::IffStream* if
 
 	switch (version) {
 	case '0014':
+	case '0015':
 		parseFromIffStream(iffStream, Version<'0014'>());
 		break;
 	default:

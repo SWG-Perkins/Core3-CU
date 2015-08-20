@@ -18,7 +18,7 @@ public:
 		healingAmount = 0;
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
 
 		if (!checkStateMask(creature))
 			return INVALIDSTATE;
@@ -40,10 +40,10 @@ public:
 
 		//creature->addBuff(String("forceinfusion_1").hashCode());
 
-		if (name.contains("_1"))
-			healingAmount = 150;
-		else
-			healingAmount = 75;
+	//	if (name.contains("_1"))
+	//		healingAmount = 150;
+	//	else
+	//		healingAmount = 75;
 
 		Reference<ForceInfusionTickTask*> fitTask = new ForceInfusionTickTask(creature, healingAmount);
 		fitTask->run();

@@ -22,65 +22,65 @@ namespace chat {
 
 class ChatRoomList : public BaseMessage {
 	int channelCounter;
-	
+
 public:
 	ChatRoomList() : BaseMessage() {
 		insertShort(0x02);
 		insertInt(0x70DEB197);  // Opcode
-		
+
 		insertInt(0); //List Count
-		
+
 		channelCounter = 0;
 
 		setCompression(true);
 	}
-	
+
 	void addChannel(ChatRoom* channel) {
 		channelCounter++;
-		
+
 		insertInt(channel->getRoomID());
 		insertInt(1);
 		insertByte(0);
 
 		insertAscii(channel->getFullPath());
-		
+
 		insertAscii("SWG");
 		insertAscii(channel->getGalaxyName());
 		insertAscii(channel->getOwner());	
-		
+
 		//This struct is a ChatAvatarId
 		insertAscii("SWG");
 		insertAscii(channel->getGalaxyName());
 		insertAscii(channel->getCreator());
-		
+
 		insertUnicode(channel->getTitle());
-		
+
 		addToUnknownListA(channel);
 		addToUnknownListB();
 	}
-	
+
 	void insertChannelListCount() {
 		insertInt(10, channelCounter);
 	}
-	
+
 	void addToUnknownListA(ChatRoom* room) {
 		insertInt(0);
-		
+
 		/*int size = room->playerList.size(); 
 		insertInt(size);
-		
+
 		for (int i = 0; i < size; i++) {
 			insertAscii("SWG");
 			insertAscii(room->getGalaxyName());
 			insertAscii(room->playerList.get(i)->getFirstName());
 		}*/
-		
+
 		/*insertInt(1); //List Count of Players in Room?
 		insertAscii("SWG");
 		insertAscii(serverName.toCharArray());
 		insertAscii(name.toCharArray());*/
 	}
-	
+
 	void addToUnknownListB() {
 		insertInt(0); //List Count
 		/*insertAscii("SWG");

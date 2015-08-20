@@ -53,17 +53,21 @@ class WeaponObjectMessage3 : public TangibleObjectMessage3 {
 public:
 	WeaponObjectMessage3(WeaponObject* weao)
 			: TangibleObjectMessage3(weao, 0x5745414F, 0x11) {
-		insertInt(0xE8000000);
 
-		insertInt(3);
-		insertInt(0);
-		insertInt(0);
+		insertInt(0); // Unk
+		insertInt(0); // Unk
+		insertFloat(weao->getMaxRange()); // Range
 
-		insertFloat(5);
+		// Weapon Type
+		if (weao->isRangedWeapon())
+			insertInt(2);
+		else if (weao->isMeleeWeapon())
+			insertInt(1);
+		else if (weao->isJediWeapon())
+			insertInt(2); // Not sure if this is right; the other two should be based on the packets we have
 
-		insertInt(0);
-		insertInt(0);
-		insertInt(0);
+		insertInt(0); // Unk
+		insertInt(0); // Unk
 
 		setSize();
 	}

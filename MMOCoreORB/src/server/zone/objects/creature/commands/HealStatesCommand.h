@@ -1,6 +1,6 @@
 /*
-Copyright (C) 2014 CU Galaxies
-*/
+				Copyright <SWGEmu>
+		See file COPYING for copying conditions.*/
 
 #ifndef HEALSTATESCOMMAND_H_
 #define HEALSTATESCOMMAND_H_
@@ -15,57 +15,70 @@ public:
 
 	}
 
-	bool canPerformSkill(CreatureObject* creature) {
-		if (!creature->hasState(CreatureState::STUNNED) && !creature->hasState(CreatureState::DIZZY)
-				&& !creature->hasState(CreatureState::INTIMIDATED) && !creature->hasState(CreatureState::BLINDED)) {
-			creature->sendSystemMessage("@healing_response:healing_response_72");
+	bool canPerformSkill(CreatureObject* creature) const {
+		if (!creature->hasState(CreatureState::STUNNED) && !creature->hasState(CreatureState::DIZZY) && !creature->hasState(CreatureState::INTIMIDATED) && !creature->hasState(CreatureState::BLINDED)) {
+			creature->sendSystemMessage("@healing_response:healing_response_72"); // You have no states of that type.
 			return false;
 		}
 
 		return true;
 	}
 
-	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) {
+	int doQueueCommand(CreatureObject* creature, const uint64& target, const UnicodeString& arguments) const {
 
-		if (!checkStateMask(creature))
-			return INVALIDSTATE;
+		int result = doCommonMedicalCommandChecks(creature);
 
-		if (!checkInvalidLocomotions(creature))
-			return INVALIDLOCOMOTION;
+		if (result != SUCCESS)
+			return result;
 
 		if (isWearingArmor(creature))
 			return NOJEDIARMOR;
 
-		if (!canPerformSkill(creature))
-			return GENERALERROR;
-
 		ManagedReference<PlayerObject*> playerObject = creature->getPlayerObject();
 
-		if (playerObject->getForcePower() <= 100) {
-			creature->sendSystemMessage("@jedi_spam:no_force_power");
-			return GENERALERROR;
-		}
 
-		if (creature->hasStates()) {
+		if (playerObject != NULL) {
+			if (playerObject->getForcePower() <= 50) {
+				creature->sendSystemMessage("@jedi_spam:no_force_power");
+				return GENERALERROR;
+			}
+
+			// At this point, the player has enough Force... Can they perform skill?
+
+			if (!canPerformSkill(creature))
+				return GENERALERROR;
+
+
+			int forceCost = 50; // Static amount.
+
 			if (creature->hasState(CreatureState::STUNNED))
-				creature->removeBuff(String("stun").hashCode());
+			creature->removeStateBuff(CreatureState::STUNNED);
 
 			if (creature->hasState(CreatureState::DIZZY))
-				creature->removeBuff(String("dizzy").hashCode());
+			creature->removeStateBuff(CreatureState::DIZZY);
 
 			if (creature->hasState(CreatureState::BLINDED))
-				creature->removeBuff(String("blind").hashCode());
+			creature->removeStateBuff(CreatureState::BLINDED);
 
 			if (creature->hasState(CreatureState::INTIMIDATED))
-				creature->removeBuff(String("intimidate").hashCode());
+			creature->removeStateBuff(CreatureState::INTIMIDATED);
+
+			// Play client effect, and deduct Force Power.
 
 			creature->playEffect("clienteffect/pl_force_heal_self.cef", "");
-			playerObject->setForcePower(playerObject->getForcePower() - 100);
-		}
+			playerObject->setForcePower(playerObject->getForcePower() - forceCost);
 
 		return SUCCESS;
+		}
+
+		return GENERALERROR;
+	}
+
+
+	float getCommandDuration(CreatureObject* object, const UnicodeString& arguments) const {
+		return defaultTime * 2.0;
 	}
 
 };
 
-#endif //HEALSTATESCOMMAND_H_
+#endif //HEALSTATESSELFCOMMAND_H_

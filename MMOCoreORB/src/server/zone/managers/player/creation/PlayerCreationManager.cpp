@@ -575,6 +575,8 @@ bool PlayerCreationManager::createCharacter(MessageCallback* data) {
 		ghost->setLanguageID(playerTemplate->getDefaultLanguage());
 	}
 
+	playerCreature->setLevel(1);
+
 	ClientCreateCharacterSuccess* msg = new ClientCreateCharacterSuccess(
 			playerCreature->getObjectID());
 	playerCreature->sendMessage(msg);
@@ -771,12 +773,12 @@ void PlayerCreationManager::addProfessionStartingItems(CreatureObject* creature,
 			creature, false, true, true);
 
 	//Set the hams.
-	for (int i = 0; i < 9; ++i) {
-		int mod = professionData->getAttributeMod(i);
-		creature->setBaseHAM(i, mod, false);
-		creature->setHAM(i, mod, false);
-		creature->setMaxHAM(i, mod, false);
-	}
+	for (int i = 0; i < 6; ++i) {
+			int mod = 1000; // All stats start at 1k.
+			creature->setBaseHAM(i, mod, false);
+			creature->setHAM(i, mod, false);
+			creature->setMaxHAM(i, mod, false);
+		}
 
 	SortedVector < String > *itemTemplates = professionData->getProfessionItems(
 			clientTemplate);
@@ -1093,7 +1095,7 @@ void PlayerCreationManager::addRacialMods(CreatureObject* creature,
 	if (racialData == NULL)
 		racialData = racialCreationData.get(0);
 
-	for (int i = 0; i < 9; ++i) {
+	for (int i = 0; i < 6; ++i) {
 		int mod = racialData->getAttributeMod(i) + creature->getBaseHAM(i);
 		creature->setBaseHAM(i, mod, false);
 		creature->setHAM(i, mod, false);

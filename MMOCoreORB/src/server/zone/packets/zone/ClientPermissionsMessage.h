@@ -12,9 +12,10 @@ public:
 	ClientPermissionsMessage() : BaseMessage(7) {
 		insertShort(0x04);
 		insertInt(0xE00730E5);
-		insertByte(1);
-		insertByte(1);
-		insertByte(0);
+		insertByte(1); // can Login
+		insertByte(1); // can create Normal character
+		insertByte(1); // can create Jedi character
+		insertByte(1); // can skip tutorial
 		
 	}
 

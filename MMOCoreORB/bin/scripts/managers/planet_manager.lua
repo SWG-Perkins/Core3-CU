@@ -350,3 +350,7 @@ tutorial = {
 dungeon1 = {
 	weatherEnabled = 0,
 }
+
+mustafar = {
+	weatherEnabled = 0,
+}
