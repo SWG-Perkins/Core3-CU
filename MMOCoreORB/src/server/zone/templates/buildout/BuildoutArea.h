@@ -28,6 +28,10 @@ class BuildoutArea : public Object {
 	bool	allowMap;
 	bool	internal;
 
+	//internal use
+public:
+	uint64 buildingObjectId;
+
 public:
 	BuildoutArea() : Object(), name(""), allowMap(false), internal(false) {
 
@@ -35,6 +39,7 @@ public:
 
 	BuildoutArea(const BuildoutArea& boa) : Object() {
 		name = boa.name;
+		buildingObjectId = boa.buildingObjectId;
 	}
 
 	BuildoutArea& operator= (const BuildoutArea& boa) {
@@ -42,6 +47,7 @@ public:
 			return *this;
 
 		name = boa.name;
+		buildingObjectId = boa.buildingObjectId;
 
 		return *this;
 	}

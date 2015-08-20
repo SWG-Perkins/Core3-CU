@@ -416,11 +416,6 @@ Reference<SceneObject*> PlanetManagerImplementation::loadBuildoutObject(DataTabl
 	ZoneServer* zoneServer = server->getZoneServer();
 
 	int totalObjects = 0;
-<<<<<<< HEAD
-	++totalObjects;
-
-	Vector<uint64> buildingObjectIDs;
-	int numBuio = 0;
 
 	TemplateManager* templateManager = TemplateManager::instance();
 
@@ -432,7 +427,7 @@ Reference<SceneObject*> PlanetManagerImplementation::loadBuildoutObject(DataTabl
 
 	String serverTemplate = templateName.replaceFirst("shared_", "");
 
-	Reference<SceneObject*> object = zoneServer->createClientObject(STRING_HASHCODE(serverTemplate), ObjectManager::instance()->getNextFreeObjectID());
+	Reference<SceneObject*> object = zoneServer->createObject(STRING_HASHCODE(serverTemplate));
 
 	if (object == NULL)
 		return NULL;
@@ -440,46 +435,46 @@ Reference<SceneObject*> PlanetManagerImplementation::loadBuildoutObject(DataTabl
 	object->setDirection(buildoutRow->setOrientationW, buildoutRow->setOrientationX, buildoutRow->setOrientationY, buildoutRow->setOrientationZ);
 
 	if (buildoutRow->portalLayoutCrc != 0) { // is building
-		buildingObjectIDs.add(object->getObjectID());
-		numBuio += 1;
+		areaIff->buildingObjectId = object->getObjectID();
 
-		object->initializePosition(buildoutRow->setX + areaIff->getX1(), buildoutRow->setY, buildoutRow->setZ + areaIff->getZ1());
+		float x = buildoutRow->setX + areaIff->getX1();
+		float z = buildoutRow->setZ + areaIff->getZ1();
+
+		object->initializePosition(x, buildoutRow->setY, z);
+
 		Locker clocker(object);
-		bool transfer = zone->transferObject(object, -1, true);
 
-		zone->inRange(object, buildoutRow->radius);
-
+		zone->transferObject(object, -1, true);
+		object->createChildObjects();
 
 	} else if (buildoutRow->sharedTemplateCrc == STRING_HASHCODE("object/cell/shared_cell.iff")) {
+		CellObject* cell = cast<CellObject*>(object.get());
+		Reference<SceneObject*> check = zoneServer->getObject(areaIff->buildingObjectId);
 
-		if (buildingObjectIDs.size() <= 0 || numBuio <= 0) {
+		if (check == NULL) {
+			//error("Couldn't find building parent.");
 			return NULL;
 		}
 
-		uint64 buioID = buildingObjectIDs.get(numBuio);
-		CellObject* cell = cast<CellObject*>(object.get());
-		Reference<SceneObject*> check = zoneServer->getObject(buioID);
+		Locker locker(check);
 
-		if (check == NULL)
-			return NULL;
-
-		object->initializePosition(buildoutRow->setX, buildoutRow->setY, buildoutRow->setZ);
-		check.castTo<BuildingObject*>()->addCell(cell, cell->getObjectID());
 		check->transferObject(cell, -1);
-		check.castTo<BuildingObject*>()->broadcastCellPermissions();
+		check.castTo<BuildingObject*>()->addCell(cell, (uint32)buildoutRow->cellIndex);
 	} else if (buildoutRow->cellIndex > 0) { // is in cell
-		Reference<SceneObject*> buildingObject = zoneServer->getObject(buildingObjectIDs.get(numBuio));
+		Reference<SceneObject*> buildingObject = zoneServer->getObject(	areaIff->buildingObjectId);
 		CellObject* cell = buildingObject.castTo<BuildingObject*>().get()->getCell(buildoutRow->cellIndex);
 
 		object->initializePosition(buildoutRow->setX, buildoutRow->setY, buildoutRow->setZ);
 
-		if (cell->getParentID() == buildingObjectIDs.get(numBuio))
+		if (cell->getParentID() == 	areaIff->buildingObjectId)
 			cell->transferObject(object.get(), -1);
 	} else {
 		Locker clocker(object);
 		object->initializePosition(buildoutRow->setX + areaIff->getX1(), buildoutRow->setZ + areaIff->getZ1(),  buildoutRow->setY);
 		zone->transferObject(object, -1, true);
 	}
+
+	++totalObjects;
 
 	if (ConfigManager::instance()->isProgressMonitorActivated())
 		printf("\r\t Loading buildout area objects: [%d] / [?]\t", totalObjects);
@@ -529,111 +524,6 @@ Vector<ManagedReference<SceneObject*> > PlanetManagerImplementation::loadBuildou
 		}
 
 		delete iffStream2;
-=======
-
-	Vector<uint64> buildingObjectIDs;
-	int numBuio = 0;
-
-	if (ConfigManager::instance()->isProgressMonitorActivated())
-		printf("\r\t Loading buildout area objects: [%d] / [?]\t", totalObjects);
-
-	TemplateManager* templateManager = TemplateManager::instance();
-
-	String templateName = templateManager->getTemplateFile(buildoutRow->sharedTemplateCrc);
-
-	if (templateName.isEmpty()){
-		return NULL;
-	}
-
-	String serverTemplate = templateName.replaceFirst("shared_", "");
-
-	Reference<SceneObject*> object = zoneServer->createClientObject(serverTemplate.hashCode(), ObjectManager::instance()->getNextFreeObjectID());
-
-	if (object == NULL)
-		return NULL;
-
-	object->initializePosition(buildoutRow->setX, buildoutRow->setY, buildoutRow->setZ);
-	object->setDirection(buildoutRow->setOrientationW, buildoutRow->setOrientationX, buildoutRow->setOrientationY, buildoutRow->setOrientationZ);
-
-	if (buildoutRow->portalLayoutCrc != 0) { // is building
-		BuildingObject* building = cast<BuildingObject*>(object.get());
-		buildingObjectIDs.add(building->getObjectID());
-		numBuio += 1;
-
-		Locker clocker(building);
-		zone->transferObject(building, -1, true);
-	} else if (buildoutRow->sharedTemplateCrc == STRING_HASHCODE("object/cell/shared_cell.iff")) {
-
-		if (buildingObjectIDs.size() <= 0 || numBuio <= 0) {
-			return NULL;
-		}
-
-		uint64 buioID = buildingObjectIDs.get(numBuio);
-		CellObject* cell = cast<CellObject*>(object.get());
-		Reference<SceneObject*> check = zoneServer->getObject(buioID);
-
-		if (check == NULL)
-			return NULL;
-
-		check.castTo<BuildingObject*>()->addCell(cell, cell->getObjectID());
-		check->transferObject(cell, -1);
-		check.castTo<BuildingObject*>()->broadcastCellPermissions();
-	} else if (buildoutRow->cellIndex > 0) { // is in cell
-		Reference<SceneObject*> buildingObject = zoneServer->getObject(buildingObjectIDs.get(numBuio));
-		CellObject* cell = buildingObject.castTo<BuildingObject*>().get()->getCell(buildoutRow->cellIndex);
-
-		if (cell->getParentID() == buildingObjectIDs.get(numBuio))
-			cell->transferObject(object.get(), -1);
-	}
-
-	++totalObjects;
-
-	delete buildoutRow;
-
-	return object;
-
-}
-
-Vector<ManagedReference<SceneObject*> > PlanetManagerImplementation::loadBuildoutArea(const String& areaName, const String& terrainName) {
-	Vector<ManagedReference<SceneObject*> > returnVector;
-
-	TemplateManager* templateManager = TemplateManager::instance();
-
-	IffStream* iffStream = templateManager->openIffFile(areaName);
-
-	if (iffStream == NULL) {
-		info("Buildout areas information not found for loading object.", true);
-		return returnVector;
-	}
-
-	DataTableIff dataIff;
-	dataIff.readObject(iffStream);
-
-	for (int i=0; i < dataIff.getTotalRows(); ++i) {
-		BuildoutArea* areaiff = new BuildoutArea();
-		areaiff->parse(dataIff.getRow(i));
-
-		String file = "datatables/buildout/" + terrainName + "/" + areaiff->getName() + ".iff";
-
-		IffStream* iffStream2 = templateManager->openIffFile(file);
-
-		if (iffStream2 == NULL) {
-			info("Buildout area information not found.", true);
-			return returnVector;
-		}
-
-
-		DataTableIff buildoutiff;
-		buildoutiff.readObject(iffStream2);
-
-		for (int j=0; j < buildoutiff.getTotalRows(); ++j) {
-			returnVector.add(loadBuildoutObject(buildoutiff.getRow(j), areaiff));
-		}
-
-		delete iffStream2;
-		return returnVector;
-
->>>>>>> branch 'master' of https://github.com/CUEmu/Core3-CU.git
 	}
 
 	delete iffStream;

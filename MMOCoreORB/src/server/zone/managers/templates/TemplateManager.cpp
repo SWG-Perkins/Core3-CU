@@ -734,16 +734,10 @@ String TemplateManager::getTemplateFile(uint32 key) {
 		String ascii = clientTemplateCRCMap->get(key);
 
 		if (ascii.isEmpty()){
-<<<<<<< HEAD
 			info("TemplateManager::getTemplateFile exception unknown template key 0x" + String::hexvalueOf((int)key));
-=======
-			error("TemplateManager::getTemplateFile exception unknown template key 0x" + String::hexvalueOf((int)key));
->>>>>>> branch 'master' of https://github.com/CUEmu/Core3-CU.git
 		}
-
 		return ascii;
 	}
-
 	return templateData->getFullTemplateString();
 }
 
