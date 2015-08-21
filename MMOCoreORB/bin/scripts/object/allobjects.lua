@@ -840,3 +840,11 @@ includeFile("weapon/objects.lua")
 -- CUEmu Buildings
 
 includeFile("building/mustafar/structures/cu_objects.lua")
+includeFile("building/mustafar/dungeon/cu_objects.lua")
+includeFile("building/mustafar/dungeon/escape_tunnel/cu_objects.lua")
+includeFile("building/mustafar/dungeon/establish_uplink/cu_objects.lua")
+includeFile("building/mustafar/dungeon/lava_cave/cu_objects.lua")
+includeFile("building/mustafar/dungeon/mining_tunnel_01/cu_objects.lua")
+includeFile("building/mustafar/dungeon/mining_tunnel_02/cu_objects.lua")
+includeFile("building/mustafar/dungeon/monster_lair/cu_objects.lua")
+includeFile("building/mustafar/dungeon/obiwan_finale/cu_objects.lua")

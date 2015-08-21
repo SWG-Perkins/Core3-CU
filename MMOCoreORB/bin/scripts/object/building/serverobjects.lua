@@ -59,5 +59,6 @@ includeFile("building/yavin/serverobjects.lua")
 
 --CUEmu
 includeFile("building/mustafar/structures/cu_serverobjects.lua")
+includeFile("building/mustafar/dungeon/cu_serverobjects.lua")
 
 -- Server Objects
