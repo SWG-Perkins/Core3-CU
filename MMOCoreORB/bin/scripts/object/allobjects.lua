@@ -840,3 +840,4 @@ includeFile("weapon/objects.lua")
 -- CUEmu Buildings
 
 includeFile("building/mustafar/structures/cu_objects.lua")
+includeFile("building/mustafar/dungeon/cu_objects.lua")

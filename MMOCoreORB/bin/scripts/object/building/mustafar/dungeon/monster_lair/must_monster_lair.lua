@@ -1,0 +1,7 @@
+--Copyright 2015 CUEmu
+
+object_building_mustafar_dungeon_monster_lair_must_monster_lair = object_building_mustafar_dungeon_monster_lair_must_monster_lair:new {
+
+}
+
+ObjectTemplates:addTemplate(object_building_mustafar_dungeon_monster_lair_must_monster_lair, "object/building/mustafar/dungeon/monster_lair/must_monster_lair.iff")
